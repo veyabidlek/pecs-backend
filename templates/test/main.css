@@ -1,0 +1,101 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,700);
+
+$color-base: #15B659;
+
+body {
+  background-color: $color-base;
+  font-family: 'Open Sans', Helvetica, sans-serif;
+  -webkit-transform: translateZ(0px);
+}
+
+div {
+  padding: 15%;
+  max-width: 500px;
+  margin: auto;
+}
+
+h2 {
+  font-size: 28px;
+  text-align: center;
+  color: darken($color-base, 10%);
+  text-shadow: lighten($color-base, 4%) 1px 1px 0;
+}
+
+ul {
+  margin: auto;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: block;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  color: darken($color-base, 10%);
+  background: white;
+  padding: 18px 18px 18px 52px;
+  font-size: 16px;
+  border-top: 1px solid darken(white, 2%);
+  border-bottom: 1px solid darken(white, 8%);
+  cursor: grab;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  box-shadow: lighten($color-base, 40%) 0 2px 0;
+  transition: transform 0.1s ease-in-out, padding 0.1s ease-out, box-shadow 0.1s ease-out;
+  &:before {
+    content: '';
+    display: block;
+    font-size: 44px;
+    line-height: 10px;
+    width: 16px;
+    height: 16px;
+    background-color: lighten($color-base, 10%);
+    position: absolute;
+    top: 0; bottom: 0; left: 18px;
+    margin: auto;
+    border-radius: 100%;
+    transition: 0.1s ease-in-out, box-shadow 0.2s ease-out;
+  }
+  &:after {
+    content: '';
+    background-color: lighten($color-base, 10%);
+    width: 0;
+    height: 4px;
+    position: absolute;
+    bottom: 0; right: 0; left: 0;
+    margin: auto;
+    opacity: 0.4;
+  }
+  &:active {
+    transform: scale(1.02);
+    cursor: grabbing;
+    padding: 24px 18px 24px 52px;
+    box-shadow: rgba(black, 0.08) 0 0 12px 6px;
+    &:before {
+      transform: scale(1.2);
+      animation: bounce 0.2s ease-out 0.01s;
+      background-color: darken($color-base, 10%);
+      box-shadow: rgba(black, 0.08) 0 0 0 4px;
+    }
+    &:after {
+      width: 100%;
+      transition: 0.2s ease-out 0.1s;
+    }
+  }
+}
+
+@keyframes bounce {
+  0% {
+   transform: scale(1);
+  }
+  40% {
+    transform: scale(2);
+  }
+  80% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.2);
+  }
+}

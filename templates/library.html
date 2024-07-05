@@ -1,0 +1,238 @@
+{% extends 'navbar.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+
+<style>
+    body {
+        background-color: var(--light-grey);
+    }
+    main {
+        margin-top: 50px;
+    }
+    .add-button-container{
+        position: fixed;
+        bottom: 0;
+        align-self: center;
+    }
+
+    .add-button{
+        border-radius: 25px;
+        border-color: rgba(0, 0, 0, 0.20);
+        background-color: #fff;
+        text-align: center;
+        width: 200px;
+        height: 45px;
+        margin: 15px 15px 30px 15px;
+        color: #FF166A;
+        cursor:pointer
+
+    }
+
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0px 0px 100px 0px;
+    }
+
+    .card {
+      flex-basis: calc(20% - 25px); /* Set the width of each card to one-third of the container minus some margin */
+      margin: 10px;
+      padding: 5px;
+      box-sizing: border-box;
+      border: 1px solid;
+      border-color: rgba(0, 0, 0, 0.20);
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .card-text {
+      font-weight: bold;
+      text-decoration: none;
+      color: #1E1E1E;
+      bottom: 0;
+    }
+
+    .button-container {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0px 0px 20px 0px;
+
+    }
+
+    .library-sort-button {
+	  padding: 5px 30px 5px 30px;
+      margin: 10px 20px 10px 0px;
+      box-sizing: border-box;
+      border: 1px solid rgba(0, 0, 0, 0.20);
+      border-radius: 60px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      color: #fff;
+    }
+    .library-sort-button:hover {
+        filter: brightness(90%);
+    }
+
+    .sidenav-right {
+      height: 100%;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      right: 0;
+      background-color: #fff;
+      transition: 0.5s;
+      padding-top: 60px;
+      width: 0px;
+    }
+    .sidenav-right-content {
+        margin: 20px;
+        position: relative;
+        top: 20%;
+        transition: 0.3s;
+    }
+    .add-form-submit, .add-form-cancel{
+        border: 3px solid var(--main-color);
+        border-radius: 10px;
+        background: var(--main-color);
+        padding: 5px 10px;
+        margin-right: 10px;
+        color: #fff;
+    }
+    .add-form-submit:hover, .add-form-cancel:hover {
+        filter: brightness(90%);
+    }
+</style>
+
+<h1>Библиотека</h1>
+
+<div class="button-container">
+    <button class="library-sort-button" style="background-color: var(--main-color)" onclick="sortCards('all')">ВСЕ</button>
+    <button class="library-sort-button" style="background-color: #5996a5" onclick="sortCards('private')">МОИ КАРТОЧКИ</button>
+</div>
+
+<div class="card-container" id="public-cards">
+{% for category in categories %}
+    <div class="card">
+        <div class="card-block">
+            <div class="card-images" style="overflow: hidden;">
+                {% for key, value in images.items %}
+                    {% if key == category  %}
+                        {% if value %}
+                            {% for item in value %}
+                                {% for k, v in item.items %}
+                            <a href="/category/{{category.name}}/{{category.id}}" >
+                                <img style="height: 190px; " src="static/{{v}}">
+                            </a>
+                                {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <a href="/category/{{category.name}}/{{category.id}}" >
+                                <img style="height: 200px; object-fit: cover;" src="{% static 'other_imgs/no_image.png'%}">
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <a href="/category/{{category.name}}/{{category.id}}"  style="bottom: 0;" class="card-text"><h5>{{category.name}}</h5></a>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+<div class="card-container" id="private-cards" style="display: none;">
+{% for images in private_imgs %}
+    <div class="card">
+        <div class="card-block">
+            {% for key, value in images.items %}
+                {% if key == 'image' %}
+                    <div class="card-images" style="overflow: hidden;">
+                        {% if value %}
+                            <a href="#">
+                                <img style="height: 190px; object-fit: cover;" src="static/{{value}}">
+                            </a>
+                        {% else %}
+                            <a href="#">
+                                <img style="height: 200px; object-fit: cover;" src="{% static 'other_imgs/no_image.png'%}">
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                        <a href="#" style="bottom: 0;" class="card-text"><h5>{{value}}</h5></a>
+                    {% endif %}
+                {% endfor %}
+
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+<div id="mySidebarRight" class="sidenav-right">
+    <div class="sidenav-right-content">
+        <div id="folder-form">
+            {% include 'add_folder_form.html' %}
+        </div>
+        <div id="image-form">
+            {% include 'add_image_form.html' %}
+        </div>
+    </div>
+</div>
+<div style="  display: flex; justify-content: center;">
+    <div class="add-button-container">
+        <button id="add-folder" class="add-button" onclick="openNavRight('folder')">Добавить папку</button>
+        <button id="add-image" class="add-button" onclick="openNavRight('image')">Добавить карточку</button>
+    </div>
+</div>
+
+<script>
+function ifOpenRight(){
+    if (document.getElementById("mySidebarRight").style.width != "310px"){
+      return false;
+    }else{
+      return true;
+    }
+}
+function openNavRight(form) {
+  if(!ifOpenRight()){
+    document.getElementById("mySidebarRight").style.width = "310px";
+    document.getElementsByTagName("main")[0].style.marginRight = "200px";
+    if(form == 'folder'){
+        document.getElementById("folder-form").style.display = "block";
+        document.getElementById("image-form").style.display = "none";
+    }
+    else {
+        document.getElementById("folder-form").style.display = "none";
+        document.getElementById("image-form").style.display = "block";
+    }
+  }
+  else {
+    if((form == 'folder') && (document.getElementById("folder-form").style.display == "none")) {
+        document.getElementById("folder-form").style.display = "block";
+        document.getElementById("image-form").style.display = "none";
+    }
+    else if((form == 'image') && (document.getElementById("image-form").style.display == "none")) {
+        document.getElementById("folder-form").style.display = "none";
+        document.getElementById("image-form").style.display = "block";
+    }
+    else {
+        document.getElementById("mySidebarRight").style.width = "0px";
+        document.getElementsByTagName("main")[0].style.marginRight = "0px";
+    }
+  }
+}
+
+function sortCards(btn) {
+    if (btn === 'all') {
+        document.getElementById('public-cards').style.display = 'flex';
+        document.getElementById('private-cards').style.display = 'none';
+    }
+    else {
+        document.getElementById('private-cards').style.display = 'flex';
+        document.getElementById('public-cards').style.display = 'none';
+    }
+}
+</script>
+
+{% endblock content %}

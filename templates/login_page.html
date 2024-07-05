@@ -1,0 +1,104 @@
+{% extends 'navbar.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+<style>
+    body {
+        background-color: var(--light-grey);
+    }
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 60px;
+    }
+    .wrapper{
+        width: 480px;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0px 15px 20px rgba(0,0,0,0.1);
+    }
+    .wrapper .title {
+        font-size: 25px;
+        font-weight: bold;
+        text-align: center;
+        color: #fff;
+        border-radius: 15px 15px 0 0;
+        background: var(--main-color);
+        padding: 20px 50px 20px 50px;
+    }
+    form {
+        padding: 10px 20px 20px 20px;
+    }
+    .field {
+        position: relative;
+        display: flex;
+        flex-flow: column wrap;
+        align-items: center;
+        margin-top: 8px;
+    }
+    .field label {
+        width: 80%;
+    }
+    .field input {
+        margin: 10px;
+        border: 2px solid;
+        border-radius: 10px;
+        border-color: var(--dark-grey);
+        padding: 10px 10px 10px 20px;
+        width: 80%;
+    }
+    .submit input {
+        font-size: var(--font-size);
+        background: var(--main-color);
+        color: #fff;
+        justify-content: center;
+        border: none;
+    }
+    .submit input:hover {
+        filter: brightness(90%);
+    }
+    .signup-link {
+        text-align: center;
+        margin: 15px;
+    }
+    .signup-link a {
+        color: var(--text-color);
+    }
+    .signup-link a:hover {
+        color: var(--main-color);
+    }
+</style>
+<div class="login-container">
+    <div class="wrapper">
+        <div class="title">
+            <span>Добро пожаловать в SӨYLEM</span>
+        </div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{message}}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <div class="field">
+                <label>Введите имя пользователя</label>
+                <input type="text" required placeholder="Имя пользователя" name="username">
+            </div>
+            <div class="field">
+                <label>Введите пароль</label>
+                <input type="password" required placeholder="Пароль" name="password">
+            </div>
+            <div class="field submit">
+                <input type="submit" value="Войти">
+            </div>
+            <div class="signup-link">
+                Впервые здесь? <a href="{% url 'signup' %}">Зарегистрироваться</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

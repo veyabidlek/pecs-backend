@@ -1,0 +1,33 @@
+{% load widget_tweaks %}
+<h2>Добавить карточку</h2>
+<form enctype='multipart/form-data' method="POST">
+  {% csrf_token %}
+  <div class="form-group">
+    <label>Наименование картинки</label><br>
+    {% render_field imageForm.label autocomplete="off" %}
+  </div>
+  <div class="form-group">
+    <label>Категория картинки</label><br>
+    {% render_field imageForm.category autocomplete="off" %}
+  </div>
+  <div class="form-group">
+    <label>Картинка</label><br>
+    {% render_field imageForm.image autocomplete="off" %}
+  </div>
+  <div class="form-group" style="display: none">
+    <label>Публичный доступ</label>
+    {% render_field imageForm.public autocomplete="off" %}
+  </div>
+  <br><br>
+  <div class="form-group">
+    <button type="submit" class="add-form-submit">Отправить</button>
+    <button onclick="closeNav()" class="add-form-cancel">Отмена</button>
+  </div>
+</form>
+
+<script>
+  function closeNav(){
+    document.getElementById("mySidebarRight").style.width = "0px";
+    document.getElementsByTagName("main")[0].style.marginRight = "0px";
+  }
+</script>

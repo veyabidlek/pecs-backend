@@ -1,0 +1,85 @@
+{% extends 'navbar.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+<style>
+    section {
+        display: grid;
+        place-items: center;
+        position: relative;
+    }
+</style>
+<section id="homePage">
+    <br><br><br><br>
+    <div>
+        <h4>SOYLEM: ваш помощник в терапии РАС</h4>
+        <h6>Начните использовать SӨYLEM и улучшите коммуникацию вашего ребенка сегодня! </h6>
+    </div>
+    <div>
+        <img src="{% static 'other_imgs/index_homePage.png' %}">
+    </div>
+</section>
+
+<section id="aboutApp">
+    <br><br><br><br>
+    <div>
+        <h6>О платформе</h6>
+        <h4>PECS Образование в новом формате</h4>
+        <h6>Наша платформа SӨYLEM предлагает современное решение для улучшения коммуникации детей с расстройствами аутистического спектра (РАС). Используя популярную систему карточек ПЕКС, мы переносим все преимущества в цифровую форму, устраняя недостатки традиционных бумажных карточек.</h6>
+    </div>
+    <div>
+        <img src="{% static 'other_imgs/index_aboutApp.png' %}">
+    </div>
+</section>
+
+<section id="team">
+    <br><br><br><br>
+    <div>
+        <h4>О нас</h4>
+        <h6>Мы - команда предпринимателей, инженеров и исследователей, посвятивших себя созданию инновационных решений для улучшения жизни детей с расстройствами аутистического спектра (РАС).
+
+Наша миссия - сделать коммуникацию и обучение детей с РАС более доступными и эффективными, используя современные технологии и индивидуальный подход.
+
+Мы гордимся тем, что были удостоены звания финалистов в конкурсе "Social Impact 2023", организованном Фондом социального развития Назарбаев Университета. Это признание подчеркивает наш вклад в социальное развитие и подтверждает важность нашего проекта.</h6>
+    </div>
+    <div>
+        <img src="{% static 'other_imgs/index_team1.png' %}">
+    </div>
+</section>
+
+<script>
+    // query selectors
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-links');
+    // helper functions
+    const activeSectionHandler = (currentSectionId) => {
+        navLinks.forEach(link => {
+            if(link.dataset.section === currentSectionId) {
+                link.classList.add('active');
+                return;
+            }
+            link.classList.remove('active');
+        })
+    }
+
+    // intersection observer
+    const sectionWatcherCallback = (section, sectionWatcher) => {
+        section.forEach(section => {
+            if(!section.isIntersecting) {return};
+            activeSectionHandler(section.target.id);
+        })
+    }
+
+    const sectionWatcherOptions = {
+        threshold: .4
+    }
+
+    const sectionWatcher = new IntersectionObserver(sectionWatcherCallback, sectionWatcherOptions)
+
+    sections.forEach(section => {
+        sectionWatcher.observe(section);
+    })
+
+    // event handler for keyboard
+</script>
+{% endblock content %}
