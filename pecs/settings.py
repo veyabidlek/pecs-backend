@@ -18,8 +18,9 @@ from django.contrib import messages
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = os.path.join(BASE_DIR,'templates')
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, "static"),
 ]
 
 MEDIA_ROOT=os.path.join(BASE_DIR,'static')
@@ -33,7 +34,7 @@ SECRET_KEY = 'django-insecure-q#c6+8)_p$zv_47x0r+r6%1x2@t@-m32oux0%t2h1l5rhgll4&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
