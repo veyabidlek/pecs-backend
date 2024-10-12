@@ -3,10 +3,41 @@ from django.shortcuts import render, redirect
 from . import forms, models
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
-from .application import play_sound
+from .application import play_sound, verification
 from django.contrib.auth import authenticate, login, logout
 import datetime
+from auth_token import utils
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+import random
 
+def generate_code(request):
+
+    codes = models.Codes.objects.filter(user=request.user.id)
+    codes.delete()
+    code = ' '.join([str(random.randint(0, 999)).zfill(3) for _ in range(2)])
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    code_lib = models.Codes.objects.get_or_create(code=code, user=request.user, time=now)
+    return render(request, 'generate_code.html', {'code': code})
+
+def verify_code(request, code_check):
+    try:
+        code = models.Codes.objects.get(code=code_check)
+    except models.Codes.DoesNotExist:
+        code = None
+
+    if code is not None:
+        if is_caregiver(request.user):
+            caregiver = models.Care_giver.objects.get(user=request.user.id)
+            recipient = models.Care_recipient.objects.get(user=code.user.id)
+            caregiver.recipients.add(recipient)
+        if is_recipient(request.user):
+            caregiver = models.Care_giver.objects.get(user=code.user.id)
+            recipient = models.Care_recipient.objects.get(user=request.user.id)
+            caregiver.recipients.add(recipient)
+    else:
+        messages.success(request, ("Ничего не найдено. Попробуйте снова"))
+    return
 def call_play_sound(req):
     today = datetime.date.today()
     now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -16,11 +47,13 @@ def call_play_sound(req):
         # voice = models.Board.objects.filter(name="PECS Board").values('voice_choice')
         # voice = voice[0]['voice_choice']
         text = req.GET.get("input_data")
+        board_id = req.GET.get("board_id")
+        board = models.Board.objects.get(id=board_id)
         print(text)
         user = req.user
-        # if user is not None:
-        #     history = models.History(text=text, date=today, time=now, user=user)
-        #     history.save()
+        if user is not None:
+            history = models.History(text=text, date=today, time=now, user=user, board=board)
+            history.save()
         play_sound.playtext(text)
         return HttpResponse()
 
@@ -69,11 +102,11 @@ def signup_user_view(request):
             user.set_password(user.password)
             user.save()
             if role == 'cg_role':
-                cg = models.Care_giver.objects.get_or_create(user=user)
+                cg, cg_created = models.Care_giver.objects.get_or_create(user=user)
                 my_group = Group.objects.get_or_create(name='CAREGIVER')
                 my_group[0].user_set.add(user)
             elif role == 'cr_role':
-                cr = models.Care_recipient.objects.get_or_create(user=user)
+                cr, cr_created = models.Care_recipient.objects.get_or_create(user=user)
                 my_group = Group.objects.get_or_create(name='RECIPIENT')
                 my_group[0].user_set.add(user)
             return redirect('login')
@@ -110,15 +143,18 @@ def library_view(request):
             'private_imgs': private_images,
             }
     if request.method == 'POST':
-        imageForm = forms.ImageForm(request.POST, request.FILES, user=request.user)
+        imageForm = forms.ImageForm(request.POST, request.FILES)
         folderForm = forms.FolderForm(request.POST)
         if imageForm.is_valid():
-            print("Imageeeeeeee")
             image = imageForm.save(commit=False)
             image.creator = request.user
+            image.category = models.Category.objects.get(id=request.POST.get('category'))
+            print(image.category)
+
             if not image.creator.is_staff:
                 image.public = False
             image.save()
+
         if folderForm.is_valid():
             folder = folderForm.save(commit=False)
             folder.creator = request.user
@@ -190,6 +226,10 @@ def board_view(request, id):
         tabs_img = list(models.Image_positions.objects.filter(tab=tab.id).distinct())
         t_i.append(tabs_img)
 
+    # if request.method == 'GET':
+    #     text = request.GET.get("input_data")
+    #     print("BOARD TEXT", text)
+
     dict = {'tabs': tabs,
             'is_cr': is_recipient(request.user),
             'is_cg': is_caregiver(request.user),
@@ -199,8 +239,157 @@ def board_view(request, id):
             'categories': categories,
             'c_images': c_images,
             'images': images,
+            'board_id': id,
             }
     return render(request, 'board.html', dict)
+
+def board_category_view(request):
+    if request.method == 'GET':
+        id = request.GET.get("input_data")
+        category = models.Category.objects.get(id=id)
+        category_imgs = models.Image.objects.filter(category_id=id)
+
+        dict = {'category': category,
+                'category_imgs': category_imgs,}
+    return render(request, 'board_category.html', dict)
+
+def caregiver_profile_view(request):
+    try:
+        caregiver = models.Care_giver.objects.get(user=request.user)
+        recipients = caregiver.recipients.all()
+    except models.Care_giver.DoesNotExist:
+        recipients = None
+
+    if request.method == 'POST':
+        d1 = str(request.POST.get('d1'))
+        d2 = str(request.POST.get('d2'))
+        d3 = str(request.POST.get('d3'))
+        d4 = str(request.POST.get('d4'))
+        d5 = str(request.POST.get('d5'))
+        d6 = str(request.POST.get('d6'))
+
+        code_check = d1 + d2 + d3 +" "+ d4 + d5 + d6
+        print("check", code_check)
+        verify_code(request, code_check)
+    dict = {'caregiver': caregiver,
+            'is_cg': True,
+            'recipients': recipients,
+            }
+    return render(request, 'caregiver_profile_page.html', dict)
+def recipient_profile_view(request):
+    recipient = models.Care_recipient.objects.get(user=request.user)
+    try:
+        caregivers = models.Care_giver.objects.filter(recipients=recipient)
+    except models.Care_giver.DoesNotExist:
+        caregivers = None
+    if request.method == 'POST':
+        d1 = str(request.POST.get('d1'))
+        d2 = str(request.POST.get('d2'))
+        d3 = str(request.POST.get('d3'))
+        d4 = str(request.POST.get('d4'))
+        d5 = str(request.POST.get('d5'))
+        d6 = str(request.POST.get('d6'))
+
+        code_check = d1 + d2 + d3 +" "+ d4 + d5 + d6
+        print("check", code_check)
+        verify_code(request, code_check)
+
+    dict = {'recipient': recipient,
+            'is_cr': True,
+            'caregivers': caregivers,
+            }
+    return render(request, 'recipient_profile_page.html', dict)
+def profile_view(request):
+    if is_recipient(request.user):
+        return redirect('recipient_profile')
+    elif is_caregiver(request.user):
+        return redirect('caregiver_profile')
+
+def recipient_profile_caregiver_view(request):
+    # code = generate_code(request)
+    recipient = models.Care_recipient.objects.get(user=request.user.id)
+    try:
+        caregivers = models.Care_giver.objects.filter(recipients=recipient)
+    except models.Care_giver.DoesNotExist:
+        caregivers = None
+    dict = {'caregivers': caregivers}
+    return render(request, 'recipient_profile_caregiver.html', dict)
+
+def caregiver_recipient_view(request):
+    # code = generate_code(request)
+    try:
+        caregiver = models.Care_giver.objects.get(user=request.user.id)
+        recipients = caregiver.recipients
+    except models.Care_giver.DoesNotExist:
+        recipients = None
+    dict = {
+            'recipients': recipients}
+    return render(request, 'caregiver_recipients.html', dict)
+
+def bar_chars(request):
+    if request.method == 'GET':
+        received_data = request.GET.get('bar_date')
+        bar_data = models.History.objects.filter(date=received_data, user=request.user).values('text', 'time')
+        print(received_data)
+
+        bar = []
+        for i in range (0, 24):
+            n=0
+            if len(bar_data) != 0:
+                for d in bar_data:
+                    if d['time'].hour == i:
+                        text = d['text'].split()
+                        n += len(text)
+            bar.append(n)
+    return render(request, 'progress_tracking.html', {'bar': bar})
+def progress(request):
+    categories = models.Category.objects.values('id', 'name')
+    histories = list(models.History.objects.filter(user=request.user.id).values('text', 'date', 'time'))[::-1]
+    boards = models.Board.objects.filter(creator=request.user)
+    print("B", boards)
+    boards_h = models.History.objects.filter(user=request.user).values('board', 'text')
+    print("BH", boards_h)
+    b=[]
+    rep=[]
+    for board in boards:
+        count = 0
+        b.append(board.name)
+        for bh in boards_h:
+            if board.id == bh['board']:
+                count += 1
+        rep.append(count/len(boards_h)*100)
+    print("rep", b)
+    # num_img = []
+    # used_img = []
+    # tab_idx = set()
+    # tab_dic = {}
+    # tabs = models.Tab.objects.values('images')
+    # val = []
+    # name = []
+    # for t in tabs:
+    #     tab_idx.add(t['images'])
+    # for j in tab_idx:
+    #     cat = models.Image.objects.filter(id=j).values('category')
+    #     tab_dic[j] = cat[0]['category']
+    # for i in categories:
+    #     image_num = len(models.Image.objects.filter(category = i['id']))
+    #     name.append(i['name'])
+    #     num_img.append(image_num)
+    #     used_img.append(len(list(filter(lambda k: float(tab_dic[k]) == i['id'], tab_dic))))
+    # for i in range (0, len(used_img)):
+    #     if num_img[i] != 0:
+    #         val.append((used_img[i], num_img[i], name[i], int(round(used_img[i]/num_img[i]*100, 0))))
+    #     else:
+    #         val.append((used_img[i], num_img[i], name[i], 0))
+    dict={
+        # 'val': val,
+        # 'name': name,
+        'histories': histories,
+        'is_cr': is_recipient(request.user),
+        'rep': rep,
+        'boards': (b),
+        }
+    return render(request, 'progress_tracking.html', dict)
 
 def is_recipient(user):
     return user.groups.filter(name='RECIPIENT').exists()

@@ -22,13 +22,36 @@
         --main-color: #619451;
         --light-main: #6fad5b;
         --light-grey: #F6F5F4;
+        --light-blue: #b8d5d9;
+        --light-purple: #baa1be;
         --grey: #EAEAEA;
         --dark-grey: #A4A4A4;
         --yellowish: #e2ad51;
         --red: #cc4b48;
+        --navy-blue: #579ca3;
+        --orange: #d57426;
         --text-color: #404042;
         --font-size: 17px;
         --font-family: "Montserrat", sans-serif;;
+    }
+        .sidenav-right {
+      height: 100%;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      right: 0;
+      background-color: #fff;
+      overflow-x: hidden;
+      transition: 0.5s;
+      padding-top: 60px;
+      border-left: 1px solid;
+      border-color: rgba(0, 0, 0, 0.20);
+    }
+    .sidenav-right-content {
+        margin: 20px;
+        position: absolute;
+        top: 20%;
+        transition: 0.3s;
     }
     body {
         font-family: var(--font-family);
@@ -40,7 +63,7 @@
         color: var(--text-color)
     }
     main {
-        margin: 0px 100px 0px 100px;
+        margin: 0px 100px 0px 200px;
         transition: margin .5s;
     }
     header {
@@ -49,7 +72,7 @@
         height: 95px;
         z-index: 100;
         background-color: #fff;
-        padding:30px 100px 10px 100px;
+        padding:30px 100px 10px 200px;
     }
     nav{
         display: flex;
@@ -146,6 +169,18 @@
         background-color: var(--main-color);
         border-radius: 0px 0px 5px 5px;
     }
+    .hide-form {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 10px 20px 10px 20px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        display: none;
+        width: 30%;
+        position: fixed;
+        z-index: 10;
+        border-radius: 10px;
+    }
 </style>
 <body>
   <header>
@@ -175,15 +210,15 @@
                       {% if user.is_staff %}
                           /admin
                       {% else %}
-                          #
+                          {% url 'profile' %}
                       {% endif %}
                       ">Мой профиль</a>
                       {% if is_cr %}
                       <a href="{% url 'my_boards' %}">Мои доски</a>
                       {% else %}
                       <a href="#">Мои подопечные</a>
-                      <a href="#">Аналитика</a>
                       {% endif %}
+                      <a href="{% url 'progress' %}">Аналитика</a>
                       <a href="{% url 'library' %}">Библиотека</a>
                       <a href="#">Настройки</a>
                       <a href="{% url 'logout' %}">Выйти</a>

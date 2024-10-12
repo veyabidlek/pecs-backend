@@ -1,0 +1,131 @@
+{% extends 'navbar.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+
+<style>
+        .pie {
+            margin: 16px;
+            height: 100px;
+            width: 100px;
+            border-radius: 50%;
+        }
+
+        .pie.hollow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pie.hollow::after {
+            content: '';
+            position: absolute;
+            height: 80px;
+            width: 80px;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+        }
+
+        .pie.three.hollow::after {
+            content: '';
+            position: absolute;
+            height: 85px;
+            width: 85px;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+        }
+
+        .pie.hollow span {
+            font-size: 15pt;
+            z-index: 2;
+            font-weight: bold;
+            font-family: "JetBrains Mono", sans-serif ;
+        }
+
+        .pie-container{
+        margin: 5px 25px 5px;
+        }
+
+        .pie-container h5{
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+        }
+
+.box {
+    background-color: #fff;
+    border-radius: 20px;
+    padding-top: 20px;
+    margin: 20px;
+}
+#donut-container{
+height: 350px;
+width: 350px;
+}
+</style>
+
+<h3 style="margin-top: 25px;">Аналитика</h3>
+
+<div class="bar-container" style="height: 300px; display: flex;
+        justify-content: center;">
+        <canvas id="myChart" ></canvas>
+    </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+  const ctx = document.getElementById('myChart');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{boards|safe}},
+      datasets: [{
+        label: '% использования досок',
+        data: {{rep}},
+        borderWidth: 1
+      }]
+    },
+    options: {
+    legend: {
+      display: false,
+    },
+    scales: {
+      x: {
+          grid: {
+            display: false
+          }
+        },
+        y: {
+            display: false,
+            beginAtZero: true,
+            grid: {
+                display: false
+            }
+        }
+      }
+    }
+  });
+</script>
+
+<div class="progress-history">
+    <div class="box">
+        <h4>История</h4>
+        <table class="table table-striped table-hover">
+            <thead>
+            <tr>
+                <th scope="col">Текст</th>
+                <th scope="col">Дата</th>
+                <th scope="col">Время</th>
+            </tr>
+            </thead>
+
+            {% for history in histories%}
+            <tr>
+                {% for k,v in history.items%}
+                <td>{{v}}</td>
+                {% endfor %}
+            </tr>
+            {% endfor%}
+        </table>
+    </div>
+</div>
+
+{% endblock content %}

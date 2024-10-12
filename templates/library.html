@@ -197,7 +197,7 @@ function ifOpenRight(){
 function openNavRight(form) {
   if(!ifOpenRight()){
     document.getElementById("mySidebarRight").style.width = "310px";
-    document.getElementsByTagName("main")[0].style.marginRight = "200px";
+    document.getElementsByTagName("main")[0].style.marginRight = "310px";
     if(form == 'folder'){
         document.getElementById("folder-form").style.display = "block";
         document.getElementById("image-form").style.display = "none";
@@ -218,7 +218,7 @@ function openNavRight(form) {
     }
     else {
         document.getElementById("mySidebarRight").style.width = "0px";
-        document.getElementsByTagName("main")[0].style.marginRight = "0px";
+        document.getElementsByTagName("main")[0].style.marginRight = "100px";
     }
   }
 }

@@ -1,0 +1,61 @@
+
+<style>
+    .card-img-top {
+        width:80px;
+        height:80px;
+        object-fit: cover;
+}
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+<body>
+<div style="display: flex; border: 1px solid #D9D9D9; border-radius: 5px; padding: 10px;">
+    {% if caregivers %}
+    <table>
+        <thead>
+        <tr>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Имя пользователя</th>
+        </tr>
+
+        </thead>
+            {% for caregiver in caregivers %}
+
+            <tbody>
+            <tr>
+                <td>{{caregiver.user.first_name}}</td>
+                <td>{{caregiver.user.last_name}}</td>
+                <td>{{caregiver.user.username}}</td>
+            </tr>
+            </tbody>
+        </table>
+
+<!--            <div class="library-bar-item" style="background: #fff; margin: 15px; border: 1px solid #D9D9D9; padding: 8px; border-radius: 3px;">-->
+<!--                    <div class="card-block" style="display: block; justify-content: center; text-align: center;">-->
+<!--                        <img class="card-img-top" src='/static/profile_pics/no_profile_pic.png'>-->
+<!--                        <div><span class="card-title" style="color: var(&#45;&#45;text-color);">{{caregiver}}</span></div>-->
+<!--                        <div><span class="card-title" style="color: var(&#45;&#45;text-color);">{{caregiver.user.username}}</span></div>-->
+<!--                    </div>-->
+<!--            </div>-->
+
+              {% endfor %}
+    {% else %}
+    <h5>У вас пока нет опекунов</h5>
+    {% endif %}
+</div>
+
+</body>

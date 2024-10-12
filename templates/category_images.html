@@ -16,10 +16,6 @@
     padding: 20px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
-
-.hideform {
-    display: none;
-}
     .card-img-top {
         width:200px;
         height:200px;
@@ -55,26 +51,26 @@
         <img class="card-img-top" src='/static/{{image.image}}'>
         <div class="card-block">
             <h5 class="card-title">{{ image.label }}</h5>
-            <button onclick="asd(2, {{image.id}})" style="background: none; border: none; cursor:pointer;"><i style="color:#8FB108; font-size: 25px;" class="fa-solid fa-square-plus"></i></button>
+            <button onclick="asd(2, {{image.id}})" style="background: none; border: none; cursor:pointer;"><i style="color:var(--main-color); font-size: 25px;" class="fa-solid fa-square-plus"></i></button>
         </div>
     </div>
 {% endfor %}
 </div>
 
 
-<div id="asd" class="center hideform">
-    <button onclick="asd(1, -1)" style="float: right;">X</button>
+<div id="asd" class="center hide-form" style="width: 30%;">
+    <button onclick="asd(1, -1)" style="float: right; background: #fff; border: none; font-size: 30px; color:var(--main-color);"><i class="fa-solid fa-square-xmark"></i></button>
     <form method="POST">
         {% csrf_token %}
 
         {% render_field addimageForm.image_id style="display:none;" id="img-id" %}
-        Choose Board:<br>
+        Выбрать доску:<br>
         {% render_field addimageForm.board %}
-        <br>
-        Choose Tab:<br>
+        <br><br>
+        Выбрать вкладку:<br>
         {% render_field addimageForm.tab %}
         <br><br>
-        <button type="submit">Submit</button>
+        <button type="submit" style="border: none; background: var(--main-color); color: #fff; border-radius: 10px; padding: 10px 20px;">Добавить</button>
     </form>
 </div>
 

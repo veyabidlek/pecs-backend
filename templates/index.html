@@ -4,46 +4,330 @@
 {% block content %}
 <style>
     section {
-        display: grid;
-        place-items: center;
         position: relative;
+        padding-top: 100px;
+        h2, h4, h6 {
+            color: var(--main-color);
+            font-weight: bold;
+        }
+    }
+    .home-img-container {
+        margin: 20px 0px;
+        padding: 0px 100px;
+        float: right;
+        height: 480px;
+        position: relative;
+
+    }
+    .home-img {
+        width: 350px;
+        z-index: 2;
+        position: absolute;
+    }
+    .home-img-back {
+        width: 350px;
+        height: 350px;
+        border-radius: 100%;
+        background: var(--light-blue);
+        z-index: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        margin: auto 0;
+    }
+    .home-img-line {
+        width: 330px;
+        height: 350px;
+        border: 2px solid var(--text-color);
+        border-radius: 100%;
+        z-index: 1;
+        position: absolute;
+        top: 15px;
+        bottom: 0;
+        margin: auto 0;
+        margin-left: 30px;
+    }
+    .home-card {
+        text-align: center;
+        width: 150px;
+        height: 170px;
+        background-color:rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(8px);
+        border-radius: 10px;
+        z-index: 5;
+        position: absolute;
+        box-shadow: -20px 30px 20px 0px rgb(0 0 0 / 10%);
+        img {
+            width: 100px;
+            margin: 5px;
+        }
+        label {
+            font-weight: bold;
+        }
+    }
+    #aboutApp {
+        h6 {
+            padding: 5px 20px;
+            border-radius: 25px;
+            display:table;
+        }
+        h4 {
+            margin: 30px 0px;
+        }
+        .home-card {
+            background-color:rgba(255, 255, 255, 0.8);
+            box-shadow: -8px 20px 20px 20px rgb(0 0 0 / 10%);
+        }
+    }
+    .app-img-container {
+        padding: 0px 30px;
+        position: relative;
+        height: 450px;
+    }
+    .app-img {
+        width: 550px;
+        z-index: 1;
+        position: absolute;
+        top: 50px;
+    }
+    .strap {
+        height: 100%;
+        width: 20px;
+        border-radius: 15px;
+        position: absolute;
+        z-index: 2;
+        top: 25px;
+    }
+    .advantages-section {
+        position: relative;
+        padding-top: 150px;
+        display: inline-block;
+        width: 100%;
+        .headers-container {
+            width: 100%;
+            text-align: center;
+            h4, h6 {
+                margin: auto;
+                color: var(--navy-blue);
+            }
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            h5 {
+                font-weight: bold;
+            }
+        }
+        table {
+            margin-top: 20px;
+        }
+        td {
+            padding: 20px 20px 50px 0px;
+        }
+        i {
+            color: #fff;
+            padding: 15px;
+            margin: 30px 30px 30px 0px;
+            border-radius: 100%;
+            font-size: 20px;
+        }
+    }
+
+    .solutions-section {
+        display: flex;
+        padding-top: 100px;
+        img {
+            width: 300px;
+            position: absolute;
+            z-index: 2;
+        }
+        .img-background {
+            background: var(--yellowish);
+            width: 290px;
+            height: 290px;
+            border-radius: 40px;
+            position: absolute;
+            z-index: 1;
+            transform: rotate(102deg) scaleX(-1);
+        }
+    }
+    .puzzle {
+            position: absolute;
+            top: -30px;
+            text-shadow: -3px 0 #fff, 0 3px #fff, 3px 0 #fff, 0 -3px #fff, -2px -2px #fff, -2px 2px #fff, 2px 2px #fff, 2px -2px #fff;
+            z-index: 5;
+            filter: brightness(120%);
+        }
+    .numeration {
+        background: var(--yellowish);
+        width: 35px;
+        height: 35px;
+        padding: 5px;
+        border-radius: 100%;
+        text-align: center;
+        margin-right: 15px;
+        color: #fff;
+    }
+
+    .team-img-container {
+        padding: 0px 100px;
+        position: relative;
+        height: 550px;
+        img {
+            position: absolute;
+            z-index: 2;
+        }
+        div {
+            position: absolute;
+            z-index: 1;
+            border-radius: 35px;
+        }
     }
 </style>
-<section id="homePage">
-    <br><br><br><br>
-    <div>
-        <h4>SOYLEM: ваш помощник в терапии РАС</h4>
-        <h6>Начните использовать SӨYLEM и улучшите коммуникацию вашего ребенка сегодня! </h6>
+<section id="homePage" style="display: flex;">
+    <div style="width: 45%; margin-right: 20px;">
+        <h2>SӨYLEM: ваш помощник в терапии РАС</h2>
+        <p style="margin-top: 20px;">Начните использовать SӨYLEM и улучшите коммуникацию вашего ребенка сегодня! </p>
+        <br>
+        <a href="{% url 'signup' %}" class="nav-button signup" style="padding: 15px;"> Попробовать бесплатно</a>
     </div>
-    <div>
-        <img src="{% static 'other_imgs/index_homePage.png' %}">
+    <div class="home-img-container">
+        <img class="home-img" src="{% static 'other_imgs/index_homePage.png' %}">
+        <div class="home-img-back"></div>
+        <div class="home-img-line"></div>
+        <div class="home-card" style="bottom: 50px; left: 40px;">
+            <img class="card-img" src="{% static 'other_imgs/car_card.png' %}" style="margin: 25px 5px;">
+            <label>көлік</label>
+        </div>
+        <div class="home-card" style="left: 380px; top: 50px;">
+            <img class="card-img" src="{% static 'other_imgs/carrot_card.png' %}" style="margin: 15px 5px;">
+            <label>сәбіз</label>
+        </div>
     </div>
 </section>
 
-<section id="aboutApp">
-    <br><br><br><br>
-    <div>
-        <h6>О платформе</h6>
+<section id="aboutApp" >
+    <subsection style="display: flex;">
+    <div style="width: 45%; top:0; bottom: 0; margin: auto 0px;">
+        <h6 style=" border: 2px solid var(--main-color);">О платформе</h6>
         <h4>PECS Образование в новом формате</h4>
-        <h6>Наша платформа SӨYLEM предлагает современное решение для улучшения коммуникации детей с расстройствами аутистического спектра (РАС). Используя популярную систему карточек ПЕКС, мы переносим все преимущества в цифровую форму, устраняя недостатки традиционных бумажных карточек.</h6>
+        <p>Наша платформа SӨYLEM предлагает современное решение для улучшения коммуникации детей с расстройствами аутистического спектра (РАС).</p>
+        <p>Используя популярную систему карточек ПЕКС, мы переносим все преимущества в цифровую форму, устраняя недостатки традиционных бумажных карточек.</p>
     </div>
-    <div>
-        <img src="{% static 'other_imgs/index_aboutApp.png' %}">
+    <div class="app-img-container">
+        <img src="{% static 'other_imgs/index_aboutApp_tablet.png' %}" class="app-img">
+        <div class="strap" style="background: var(--light-blue); left: 380px;"></div>
+        <div class="strap" style="background: var(--yellowish); left: 180px;"></div>
+        <div class="home-card" style="top: 200px; left: 125px;">
+            <img class="card-img" src="{% static 'other_imgs/cat_card.png' %}" style="margin: 20px 5px;">
+            <label>мысық</label>
+        </div>
+        <div class="home-card" style="left: 325px; top: 130px;">
+            <img class="card-img" src="{% static 'other_imgs/dress_card.png' %}">
+            <label>көйлек</label>
+        </div>
     </div>
+</subsection>
+
+    <subsection class="advantages-section">
+    <div class="headers-container">
+        <h6 style=" border: 2px solid var(--navy-blue);">Наши преимущества</h6>
+        <h4> Преимущества платформы SӨYLEM</h4>
+    </div>
+    <div class="advantages-table">
+        <table>
+            <tr>
+                <td>
+                    <div class="item">
+                        <div><i class="fa-solid fa-wrench" style="background: var(--navy-blue);"></i></div>
+                        <div>
+                            <h5>Индивидуальные настройки</h5>
+                            <p>Приложение позволяет настраивать карточки под потребности каждого ребенка.</p>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="item">
+                        <div><i class="fa-solid fa-wrench" style="background: var(--main-color);"></i></div>
+                        <div>
+                            <h5>Реалистичные карточки</h5>
+                            <p>Приложение позволяет настраивать карточки под потребности каждого ребенка.</p>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="item">
+                        <div><i class="fa-solid fa-wrench" style="background: var(--light-purple);"></i></div>
+                        <div>
+                            <h5>Распознавание и создание речи</h5>
+                            <p>Приложение позволяет настраивать карточки под потребности каждого ребенка.</p>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="item">
+                        <div><i class="fa-solid fa-wrench" style="background: var(--orange);"></i></div>
+                        <div>
+                            <h5>Отслеживание прогресса</h5>
+                            <p>Приложение позволяет настраивать карточки под потребности каждого ребенка.</p>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</subsection>
+
+    <subsection class="solutions-section">
+        <div style="width: 40%; height: 350px; position: relative; display: flex; justify-content: center;">
+            <img src="{% static 'other_imgs/index_solution_img.png' %}">
+            <div class="img-background"></div>
+            <i class="fa-solid fa-puzzle-piece puzzle" style="color: var(--yellowish); font-size: 50px; transform: rotate(70deg) scaleX(-1); "></i>
+        </div>
+        <div>
+            <h4 style="margin: 25px 0px; color: var(--navy-blue);">Проблемы, которые мы решаем</h4>
+            <ul style="padding: 0;">
+                <li style="display: flex; margin-top: 15px;">
+                    <div class="numeration">1</div>
+                    <p>Постоянная необходимость распечатывать новые карточки</p>
+                </li>
+                <li style="display: flex; margin-top: 15px;">
+                    <div class="numeration">2</div>
+                    <p>Потеря или износ карточек</p>
+                </li>
+                <li style="display: flex; margin-top: 15px;">
+                    <div class="numeration">3</div>
+                    <p>Сложность переноски большого количества карточек</p>
+                </li>
+                <li style="display: flex; margin-top: 15px;">
+                    <div class="numeration">4</div>
+                    <p>Запутанность из-за большого количества карточек</p>
+                </li>
+            </ul>
+
+        </div>
+    </subsection>
+
 </section>
 
-<section id="team">
-    <br><br><br><br>
-    <div>
+
+<section id="team" style="display: flex; margin-bottom: 50px; padding-top: 150px;">
+    <div style="width: 45%; top:0; bottom: 0; margin: auto 0px;">
         <h4>О нас</h4>
-        <h6>Мы - команда предпринимателей, инженеров и исследователей, посвятивших себя созданию инновационных решений для улучшения жизни детей с расстройствами аутистического спектра (РАС).
-
-Наша миссия - сделать коммуникацию и обучение детей с РАС более доступными и эффективными, используя современные технологии и индивидуальный подход.
-
-Мы гордимся тем, что были удостоены звания финалистов в конкурсе "Social Impact 2023", организованном Фондом социального развития Назарбаев Университета. Это признание подчеркивает наш вклад в социальное развитие и подтверждает важность нашего проекта.</h6>
+        <p>Мы - команда предпринимателей, инженеров и исследователей, посвятивших себя созданию инновационных решений для улучшения жизни детей с расстройствами аутистического спектра (РАС).</p>
+        <p>Наша миссия - сделать коммуникацию и обучение детей с РАС более доступными и эффективными, используя современные технологии и индивидуальный подход.</p>
+        <p>Мы гордимся тем, что были удостоены звания финалистов в конкурсе "Social Impact 2023", организованном Фондом социального развития Назарбаев Университета. Это признание подчеркивает наш вклад в социальное развитие и подтверждает важность нашего проекта.</p>
     </div>
-    <div>
-        <img src="{% static 'other_imgs/index_team1.png' %}">
+    <div class="team-img-container">
+        <img src="{% static 'other_imgs/index_team1.png' %}" style="width: 350px;">
+        <div style="background: var(--navy-blue); width: 350px; height: 268px; transform: rotate(-10deg) scaleX(-1);"></div>
+        <i class="fa-solid fa-puzzle-piece puzzle" style="color: var(--navy-blue); font-size: 50px; transform: rotate(20deg) scaleX(-1); left: 250px;"></i>
+
+        <img src="{% static 'other_imgs/index_team2.png' %}" style="width: 280px; top: 240px; left: 280px;">
+        <div style="background: var(--main-color); width: 246px; height: 285px; top: 253px; left: 297px;"></div>
+        <i class="fa-solid fa-puzzle-piece puzzle" style="color: var(--main-color); font-size: 50px; transform: rotate(-190deg) scaleX(-1); top: 230px; left: 425px;"></i>
     </div>
 </section>
 

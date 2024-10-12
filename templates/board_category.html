@@ -1,0 +1,18 @@
+<div class="library-header" style="display: flex;">
+    <button style="border: none; background: transparent; color: #fff;" onclick="openLibrary()"><i
+            class="fa-solid fa-chevron-left"></i> Медиатека</button>
+
+    <div style="margin-left: 400px;">{{category.name}}</div>
+</div>
+<div id="category_container" class="library-content" style="display: flex;">
+    <div class="library-image-container">
+            {% for img in category_imgs %}
+            <div class="library-bar-item" style="background: #fff;">
+                    <div class="card-block">
+                        <img class="card-img-top" src='/static/{{img.image}}'>
+                        <span class="card-title" style="color: var(--text-color);">{{img.label}}</span>
+                    </div>
+            </div>
+              {% endfor %}
+        </div>
+</div>

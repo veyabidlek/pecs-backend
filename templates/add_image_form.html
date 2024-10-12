@@ -8,7 +8,11 @@
   </div>
   <div class="form-group">
     <label>Категория картинки</label><br>
-    {% render_field imageForm.category autocomplete="off" %}
+    <select name="category" style="padding: 4px;">
+      {% for category in categories %}
+        <option value="{{category.id}}">{{category}}</option>
+      {% endfor %}
+    </select>
   </div>
   <div class="form-group">
     <label>Картинка</label><br>
