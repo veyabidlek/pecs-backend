@@ -4,6 +4,7 @@ from unittest import mock
 import time
 import datetime
 
+
 class TOTPVerification:
 
     def __init__(self):
@@ -70,4 +71,3 @@ def start():
     token = int(input("Enter token: "))
     phone2 = TOTP(key=secret_key, digits=6, step=300)
     print(phone2.verify(token))
-

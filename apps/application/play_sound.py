@@ -5,6 +5,7 @@ from gtts import gTTS
 from io import BytesIO
 import pygame
 
+
 def playtext(text):
     # # speech_key, service_region = "ece226900a9c434a8a4f61a436c68977", "eastus"
     # speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
@@ -28,7 +29,6 @@ def playtext(text):
     #             print("Error details: {}".format(cancellation_details.error_details))
     #             print("Did you set the speech resource key and region values?")
 
-
     fp = BytesIO()
     tts = gTTS(text=text, lang='ru', slow=False)
     tts.write_to_fp(fp)
@@ -39,7 +39,6 @@ def playtext(text):
     pygame.mixer.init()
     pygame.mixer.music.load(fp)
     pygame.mixer.music.play()
-
 
 # from openai import OpenAI
 #

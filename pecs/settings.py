@@ -16,14 +16,14 @@ from django.contrib import messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-TEMPLATE_DIR = os.path.join(BASE_DIR,'templates')
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-MEDIA_ROOT=os.path.join(BASE_DIR,'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -35,7 +35,6 @@ SECRET_KEY = 'django-insecure-q#c6+8)_p$zv_47x0r+r6%1x2@t@-m32oux0%t2h1l5rhgll4&
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-
 
 # Application definition
 
@@ -49,7 +48,8 @@ INSTALLED_APPS = [
     'apps',
     'widget_tweaks',
     'django_otp',
-    'django_otp.plugins.otp_totp'
+    'django_otp.plugins.otp_totp',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
@@ -83,7 +83,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pecs.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -113,7 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -125,7 +123,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
@@ -135,16 +132,14 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# MESSAGE_TAGS = {
-#     messages.ERROR: 'danger'
-# }
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pecs_v2.0',
-        'USER': 'postgres',
-        'PASSWORD': 'Qqwerty1!',
+        'NAME': 'mydb',
+        'USER': 'beka',
+        'PASSWORD': 'Beka2005',
         'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
