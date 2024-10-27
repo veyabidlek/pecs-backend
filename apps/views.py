@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -344,9 +345,9 @@ class BoardCollectionView(APIView):
 class BoardDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, id):
+    def get(self, request, board_id):
         try:
-            board = Board.objects.get(id=id)
+            board = Board.objects.get(id=board_id)
         except Board.DoesNotExist:
             return Response({"error": "Board not found."}, status=status.HTTP_404_NOT_FOUND)
 
