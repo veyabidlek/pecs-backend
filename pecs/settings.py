@@ -49,8 +49,17 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'django_otp',
     'django_otp.plugins.otp_totp',
-    'rest_framework'
+    'rest_framework',
+    'rest_framework.authtoken'
+
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -96,6 +105,7 @@ WSGI_APPLICATION = 'pecs.wsgi.application'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

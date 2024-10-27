@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 from .models import Care_recipient, Care_giver, Category, Image, Board, Tab, Image_positions, History, Codes
 
 
@@ -90,6 +92,8 @@ class PlaySoundSerializer(serializers.Serializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(max_length=50)
+
     class Meta:
         model = User
         fields = ['username', 'password', 'email', 'first_name', 'last_name', 'role']
@@ -110,9 +114,11 @@ class SignupSerializer(serializers.ModelSerializer):
             # Add user to RECIPIENT group
             my_group, _ = Group.objects.get_or_create(name='RECIPIENT')
             my_group.user_set.add(user)
+        else:
+            raise ValidationError(
+                {"role": "Invalid role specified. Use 'cg_role' for caregiver or 'cr_role' for care recipient."})
 
         return user
-
 
 # class FolderSerializer(serializers.ModelSerializer):
 #     class Meta:
