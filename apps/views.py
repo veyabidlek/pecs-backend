@@ -1,18 +1,16 @@
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import forms, models
+from . import models
 from .application import play_sound
 from django.contrib.auth import authenticate, login, logout
 from django.utils.translation import gettext as _
 
-import datetime
+from datetime import datetime
 import random
 
 from .models import Care_recipient, Care_giver, Codes, Board, Category, Image, Tab, Image_positions, History
@@ -22,6 +20,8 @@ from .serializers import CaregiverSerializer, VerifyCodeSerializer, PlaySoundSer
 
 
 class CaregiverProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         try:
             caregiver = Care_giver.objects.get(user=request.user)
@@ -53,15 +53,13 @@ class CaregiverProfileView(APIView):
 
 
 class GenerateCodeView(APIView):
-    # pass
-    permission_classes = [IsAuthenticated]  # Require user to be authenticated
-    #
-    @csrf_exempt
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         Codes.objects.filter(user=request.user).delete()
 
         code = ' '.join([str(random.randint(0, 999)).zfill(3) for _ in range(2)])
-        now = datetime.datetime.now().strftime("%H:%M:%S")
+        now = datetime.now().strftime("%H:%M:%S")
 
         code_lib, created = Codes.objects.get_or_create(code=code, user=request.user, defaults={'time': now})
 
@@ -84,7 +82,6 @@ class VerifyCodeView(APIView):
                 return Response({'success': False, 'message': "Code not found. Please try again."},
                                 status=status.HTTP_404_NOT_FOUND)
 
-            # Perform role-based checks
             user = request.user
             if is_caregiver(user):
                 caregiver = Care_giver.objects.get(user=user)
@@ -103,26 +100,6 @@ class VerifyCodeView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def verify_code(request, code_check):
-    try:
-        code = models.Codes.objects.get(code=code_check)
-    except models.Codes.DoesNotExist:
-        return {'success': False, 'message': "Code not found. Please try again."}
-
-    if is_caregiver(request.user):
-        caregiver = models.Care_giver.objects.get(user=request.user.id)
-        recipient = models.Care_recipient.objects.get(user=code.user.id)
-        caregiver.recipients.add(recipient)
-    elif is_recipient(request.user):
-        caregiver = models.Care_giver.objects.get(user=code.user.id)
-        recipient = models.Care_recipient.objects.get(user=request.user.id)
-        caregiver.recipients.add(recipient)
-    else:
-        return {'success': False, 'message': "User role not recognized."}
-
-    return {'success': True, 'message': "Code verified successfully."}
-
-
 class PlaySoundView(APIView):
     def get(self, request):
         serializer = PlaySoundSerializer(data=request.GET)
@@ -131,22 +108,20 @@ class PlaySoundView(APIView):
             input_data = serializer.validated_data.get('input_data')
             board_id = serializer.validated_data.get('board_id')
 
-            # Fetch and serialize board instance
             try:
                 board = Board.objects.get(id=board_id)
                 board_serializer = BoardSerializer(board)
             except Board.DoesNotExist:
                 return Response({'success': False, 'message': "Board not found."}, status=status.HTTP_404_NOT_FOUND)
 
-            # Log history if user is authenticated
             user = request.user
             if user.is_authenticated:
                 history_data = {
                     'text': input_data,
-                    'date': datetime.date.today(),
-                    'time': datetime.datetime.now().strftime("%H:%M:%S"),
-                    'user': user.id,  # Send ID to link with user FK
-                    'board': board.id  # Send ID to link with board FK
+                    'date': datetime.today(),
+                    'time': datetime.now().strftime("%H:%M:%S"),
+                    'user': user.id,
+                    'board': board.id
                 }
                 history_serializer = HistorySerializer(data=history_data)
 
@@ -155,7 +130,6 @@ class PlaySoundView(APIView):
                 else:
                     return Response(history_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            # Call playtext function to play sound
             play_sound.playtext(input_data)
             return Response({
                 'success': True,
@@ -184,14 +158,13 @@ class RecipientProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
 
     def get(self, request):
-        is_cr = Care_recipient.objects.filter(user=request.user).exists()
-        is_cg = Care_giver.objects.filter(user=request.user).exists()
-
+        care_recipient = Care_recipient.objects.get(user=request.user)
+        serializer = CareRecipientSerializer(care_recipient)
         data = {
-            'is_cr': is_cr,
-            'is_cg': is_cg,
+            'is_cr': True,
+            'caregiver': serializer.data,
         }
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class LoginUserView(APIView):
@@ -379,9 +352,9 @@ class BoardDetailView(APIView):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
-    def post(self, request, id):
+    def post(self, request, board_id):
         try:
-            board = Board.objects.get(id=id)
+            board = Board.objects.get(id=board_id)
         except Board.DoesNotExist:
             return Response({"error": "Board not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -501,14 +474,12 @@ class BarCharsView(APIView):
         bar_data = History.objects.filter(date=received_date, user=request.user).values('text', 'time')
         bar = []
 
-        # Generate word counts for each hour of the day
         for hour in range(0, 24):
             word_count = sum(
                 len(d['text'].split()) for d in bar_data if d['time'].hour == hour
             )
             bar.append(word_count)
 
-        # Return the word counts data in a JSON response
         return Response({'bar': bar}, status=200)
 
 
@@ -516,7 +487,7 @@ class ProgressView(APIView):
     permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
 
     def get(self, request):
-        categories = Category.objects.values('id', 'name')
+        # categories = Category.objects.values('id', 'name')
         histories = list(History.objects.filter(user=request.user.id).values('text', 'date', 'time'))[::-1]
         boards = Board.objects.filter(creator=request.user)
 
@@ -531,11 +502,10 @@ class ProgressView(APIView):
                 if board.id == bh['board']:
                     count += 1
             if len(boards_h) > 0:
-                rep.append(count / len(boards_h) * 100)  # Calculate percentage representation
+                rep.append(count / len(boards_h) * 100)
             else:
-                rep.append(0)  # Avoid division by zero if there are no history entries
+                rep.append(0)
 
-        # Prepare response data
         data = {
             'histories': histories,
             'is_recipient': is_recipient(request.user),
@@ -552,3 +522,23 @@ def is_recipient(user):
 
 def is_caregiver(user):
     return user.groups.filter(name='CAREGIVER').exists()
+
+
+def verify_code(request, code_check):
+    try:
+        code = models.Codes.objects.get(code=code_check)
+    except models.Codes.DoesNotExist:
+        return {'success': False, 'message': "Code not found. Please try again."}
+
+    if is_caregiver(request.user):
+        caregiver = models.Care_giver.objects.get(user=request.user.id)
+        recipient = models.Care_recipient.objects.get(user=code.user.id)
+        caregiver.recipients.add(recipient)
+    elif is_recipient(request.user):
+        caregiver = models.Care_giver.objects.get(user=code.user.id)
+        recipient = models.Care_recipient.objects.get(user=request.user.id)
+        caregiver.recipients.add(recipient)
+    else:
+        return {'success': False, 'message': "User role not recognized."}
+
+    return {'success': True, 'message': "Code verified successfully."}
