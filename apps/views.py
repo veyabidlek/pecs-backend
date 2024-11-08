@@ -1,4 +1,11 @@
+import random
+from datetime import datetime
+
+from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
+from django.utils.translation import gettext as _
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -7,12 +14,6 @@ from rest_framework.views import APIView
 
 from . import models
 from .application import play_sound
-from django.contrib.auth import authenticate, login, logout
-from django.utils.translation import gettext as _
-
-from datetime import datetime
-import random
-
 from .models import Care_recipient, Care_giver, Codes, Board, Category, Image, Tab, Image_positions, History
 from .serializers import CaregiverSerializer, VerifyCodeSerializer, PlaySoundSerializer, BoardSerializer, \
     HistorySerializer, SignupSerializer, ImageSerializer, CategorySerializer, TabSerializer, \
@@ -22,6 +23,22 @@ from .serializers import CaregiverSerializer, VerifyCodeSerializer, PlaySoundSer
 class CaregiverProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get the profile information of the authenticated caregiver",
+        responses={
+            200: openapi.Response(
+                description="Caregiver profile retrieved successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                        # 'caregiver': openapi.Schema()
+                    }
+                )
+            ),
+            404: "Caregiver not found"
+        }
+    )
     def get(self, request):
         try:
             caregiver = Care_giver.objects.get(user=request.user)
@@ -34,6 +51,23 @@ class CaregiverProfileView(APIView):
         except Care_giver.DoesNotExist:
             return Response({'detail': 'Caregiver not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'd1': openapi.Schema(type=openapi.TYPE_STRING),
+                'd2': openapi.Schema(type=openapi.TYPE_STRING),
+                'd3': openapi.Schema(type=openapi.TYPE_STRING),
+                'd4': openapi.Schema(type=openapi.TYPE_STRING),
+                'd5': openapi.Schema(type=openapi.TYPE_STRING),
+                'd6': openapi.Schema(type=openapi.TYPE_STRING),
+            }
+        ),
+        responses={
+            200: "Code verified successfully",
+            400: "Invalid code"
+        }
+    )
     def post(self, request):
         d1 = request.data.get('d1', '')
         d2 = request.data.get('d2', '')
@@ -55,6 +89,22 @@ class CaregiverProfileView(APIView):
 class GenerateCodeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Generate a new verification code for the authenticated user",
+        responses={
+            201: openapi.Response(
+                description="Code generated successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'code': openapi.Schema(type=openapi.TYPE_STRING),
+                        'time': openapi.Schema(type=openapi.TYPE_STRING),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            )
+        }
+    )
     def post(self, request):
         Codes.objects.filter(user=request.user).delete()
 
@@ -71,6 +121,23 @@ class GenerateCodeView(APIView):
 
 
 class VerifyCodeView(APIView):
+    @swagger_auto_schema(
+        request_body=VerifyCodeSerializer,
+        responses={
+            200: openapi.Response(
+                description="Code verified successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            ),
+            400: "Invalid request data",
+            404: "Code not found"
+        }
+    )
     def post(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
         if serializer.is_valid():
@@ -101,6 +168,25 @@ class VerifyCodeView(APIView):
 
 
 class PlaySoundView(APIView):
+
+    @swagger_auto_schema(
+        query_serializer=PlaySoundSerializer(),
+        responses={
+            200: openapi.Response(
+                description="Sound played successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING),
+                        'board': openapi.Schema(type=openapi.TYPE_OBJECT)
+                    }
+                )
+            ),
+            400: "Invalid request data",
+            404: "Board not found"
+        }
+    )
     def get(self, request):
         serializer = PlaySoundSerializer(data=request.GET)
 
@@ -143,6 +229,21 @@ class PlaySoundView(APIView):
 class IndexView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
 
+    @swagger_auto_schema(
+        operation_description="Get user role information",
+        responses={
+            200: openapi.Response(
+                description="User role information retrieved",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                    }
+                )
+            )
+        }
+    )
     def get(self, request):
         is_cr = Care_recipient.objects.filter(user=request.user).exists()
         is_cg = Care_giver.objects.filter(user=request.user).exists()
@@ -157,6 +258,21 @@ class IndexView(APIView):
 class RecipientProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
 
+    @swagger_auto_schema(
+        operation_description="Get the profile information of the authenticated care recipient",
+        responses={
+            200: openapi.Response(
+                description="Care recipient profile retrieved successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        # 'caregiver': openapi.Schema(type=openapi.TYPE_OBJECT)
+                    }
+                )
+            )
+        }
+    )
     def get(self, request):
         care_recipient = Care_recipient.objects.get(user=request.user)
         serializer = CareRecipientSerializer(care_recipient)
@@ -170,6 +286,32 @@ class RecipientProfileView(APIView):
 class LoginUserView(APIView):
     permission_classes = [AllowAny]  # Allow any user to access this endpoint
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, format='password')
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Login successful",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'token': openapi.Schema(type=openapi.TYPE_STRING),
+                        'user_type': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            enum=['recipient', 'caregiver', 'unknown']
+                        )
+                    }
+                )
+            ),
+            400: "Invalid credentials"
+        }
+    )
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -192,12 +334,33 @@ class LoginUserView(APIView):
 class LogoutUserView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
 
+    @swagger_auto_schema(
+        operation_description="Logout the authenticated user",
+        responses={
+            200: openapi.Response(
+                description="Logout successful",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            )
+        }
+    )
     def post(self, request):
         logout(request)  # Log out the user
         return Response({'message': 'Successfully logged out.'}, status=200)  # Success response
 
 
 class SignupUserView(APIView):
+    @swagger_auto_schema(
+        request_body=SignupSerializer,
+        responses={
+            201: openapi.Response(description="User created successfully!"),
+            400: "Validation errors"
+        },
+    )
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
@@ -209,6 +372,25 @@ class SignupUserView(APIView):
 class LibraryView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get library categories and images",
+        responses={
+            200: openapi.Response(
+                description="Library data retrieved successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'current_path': openapi.Schema(type=openapi.TYPE_STRING),
+                        'categories': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                     items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                        'images': openapi.Schema(type=openapi.TYPE_OBJECT),
+                        'private_imgs': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                       items=openapi.Schema(type=openapi.TYPE_OBJECT))
+                    }
+                )
+            )
+        }
+    )
     def get(self, request):
         categories = Category.objects.all().order_by('name')
         public_categories = [cat for cat in categories if not cat.is_private()]
@@ -234,6 +416,13 @@ class LibraryView(APIView):
 
         return Response(response_data)
 
+    @swagger_auto_schema(
+        request_body=ImageSerializer,
+        responses={
+            201: "Image uploaded successfully",
+            400: "Invalid image data"
+        }
+    )
     def post(self, request):
         image_form = ImageSerializer(data=request.data)
         if image_form.is_valid():
@@ -243,10 +432,113 @@ class LibraryView(APIView):
         return Response(image_form.errors, status=400)
 
 
+class BoardCollectionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Get all boards for the authenticated user",
+        responses={
+            200: openapi.Response(
+                description="Boards retrieved successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'boards': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                 items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                        'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                    }
+                )
+            )
+        }
+    )
+    def get(self, request):
+        boards = Board.objects.filter(creator=request.user)
+        serializer = BoardSerializer(boards, many=True)
+
+        response_data = {
+            'boards': serializer.data,
+            'is_cr': is_recipient(request.user),
+            'is_cg': is_caregiver(request.user),
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['name'],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        responses={
+            201: "Board and default tab created successfully",
+            400: "Board name is required",
+            200: "Board already exists"
+        }
+    )
+    def post(self, request):
+        name = request.data.get('name')
+
+        if not name:
+            return Response({"error": "Board name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        board, created = Board.objects.get_or_create(name=name, creator=request.user)
+
+        if created:
+            Tab.objects.get_or_create(board=board, straps_num=5, name='Главная')
+            return Response({"message": "Board and default tab created successfully."}, status=status.HTTP_201_CREATED)
+
+        return Response({"message": "Board already exists."}, status=status.HTTP_200_OK)
+
+
+category_response = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'images': openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'label': openapi.Schema(type=openapi.TYPE_STRING),
+                    'image': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        ),
+        'category': openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+            }
+        ),
+        'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+        'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+    }
+)
+
+
 class CategoryImageView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, name, id):
+    @swagger_auto_schema(
+        operation_description="Get images for a specific category",
+        responses={
+            200: category_response,
+            404: openapi.Response(description="Category not found")
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'id',
+                openapi.IN_PATH,
+                description="Category ID",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+        ]
+    )
+    def get(self, request, id):
         try:
             category = Category.objects.get(id=id)
             images = Image.objects.filter(category=category).values('id', 'label', 'image').distinct()
@@ -264,6 +556,22 @@ class CategoryImageView(APIView):
         except Category.DoesNotExist:
             return Response({'error': 'Category not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+    @swagger_auto_schema(
+        operation_description="Add an image to a tab",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['image_id', 'tab'],
+            properties={
+                'image_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'tab': openapi.Schema(type=openapi.TYPE_INTEGER),
+            }
+        ),
+        responses={
+            201: openapi.Response(description="Image added successfully"),
+            404: openapi.Response(description="Image or Tab not found"),
+            400: openapi.Response(description="Invalid input")
+        }
+    )
     def post(self, request):
         add_image_form = ImageSerializer(data=request.data)
 
@@ -286,38 +594,38 @@ class CategoryImageView(APIView):
             return Response(add_image_form.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BoardCollectionView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        boards = Board.objects.filter(creator=request.user)
-        serializer = BoardSerializer(boards, many=True)
-
-        response_data = {
-            'boards': serializer.data,
-            'is_cr': is_recipient(request.user),
-            'is_cg': is_caregiver(request.user),
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        name = request.data.get('name')
-
-        if not name:
-            return Response({"error": "Board name is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        board, created = Board.objects.get_or_create(name=name, creator=request.user)
-
-        if created:
-            Tab.objects.get_or_create(board=board, straps_num=5, name='Главная')
-            return Response({"message": "Board and default tab created successfully."}, status=status.HTTP_201_CREATED)
-
-        return Response({"message": "Board already exists."}, status=status.HTTP_200_OK)
-
-
 class BoardDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get detailed information about a board",
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'tabs': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                    'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                    'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                    'tabs_img': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                    'categories': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                 items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                    'c_images': openapi.Schema(type=openapi.TYPE_OBJECT),
+                    'images': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                    'board_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                }
+            ),
+            404: openapi.Response(description="Board not found")
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'board_id',
+                openapi.IN_PATH,
+                description="Board ID",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+        ]
+    )
     def get(self, request, board_id):
         try:
             board = Board.objects.get(id=board_id)
@@ -352,6 +660,23 @@ class BoardDetailView(APIView):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_description="Create a new tab in a board",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['name', 'straps', 'color'],
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                'straps': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'color': openapi.Schema(type=openapi.TYPE_STRING),
+            }
+        ),
+        responses={
+            201: openapi.Response(description="Tab created successfully"),
+            404: openapi.Response(description="Board not found"),
+            400: openapi.Response(description="Missing required fields")
+        }
+    )
     def post(self, request, board_id):
         try:
             board = Board.objects.get(id=board_id)
@@ -378,6 +703,32 @@ class BoardDetailView(APIView):
 class BoardCategoryView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get category and its images",
+        manual_parameters=[
+            openapi.Parameter(
+                'input_data',
+                openapi.IN_QUERY,
+                description="Category ID",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'category': openapi.Schema(type=openapi.TYPE_OBJECT),
+                    'category_images': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_OBJECT)
+                    ),
+                }
+            ),
+            404: openapi.Response(description="Category not found"),
+            400: openapi.Response(description="Category ID is required")
+        }
+    )
     def get(self, request):
         category_id = request.query_params.get("input_data")
 
@@ -408,6 +759,21 @@ class BoardCategoryView(APIView):
 class RecipientProfileCaregiverView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get caregivers associated with a recipient",
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'caregivers': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_OBJECT)
+                    ),
+                }
+            ),
+            404: openapi.Response(description="Care recipient profile not found")
+        }
+    )
     def get(self, request):
         try:
             # Get the Care_recipient object associated with the logged-in user
@@ -428,6 +794,19 @@ class RecipientProfileCaregiverView(APIView):
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get user profile information",
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'user': openapi.Schema(type=openapi.TYPE_STRING),
+                    'profile_url': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            ),
+            400: openapi.Response(description="User role not recognized")
+        }
+    )
     def get(self, request):
         if is_recipient(request.user):
             user = 'recipient'
@@ -445,6 +824,21 @@ class ProfileView(APIView):
 class CaregiverRecipientView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure only logged-in users can access this
 
+    @swagger_auto_schema(
+        operation_description="Get recipients associated with a caregiver",
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'recipients': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_OBJECT)
+                    ),
+                }
+            ),
+            404: openapi.Response(description="Caregiver not found")
+        }
+    )
     def get(self, request):
         try:
             caregiver = Care_giver.objects.get(user=request.user)
@@ -459,6 +853,32 @@ class CaregiverRecipientView(APIView):
 class BarCharsView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access this view
 
+    @swagger_auto_schema(
+        operation_description="Get word count data per hour for a specific date",
+        manual_parameters=[
+            openapi.Parameter(
+                'bar_date',
+                openapi.IN_QUERY,
+                description="Date for bar chart data (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'bar': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_INTEGER),
+                        description="Array of 24 integers representing word counts for each hour"
+                    ),
+                }
+            ),
+            400: openapi.Response(description="Invalid date format or missing date parameter")
+        }
+    )
     def get(self, request):
         # Retrieve and format the date from request parameters
         received_date = request.query_params.get('bar_date')
@@ -486,6 +906,26 @@ class BarCharsView(APIView):
 class ProgressView(APIView):
     permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
 
+    @swagger_auto_schema(
+        operation_description="Get user progress statistics",
+        responses={
+            200: openapi.Response(
+                description="Progress data retrieved successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'histories': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                    items=openapi.Schema(type=openapi.TYPE_OBJECT)),
+                        'is_recipient': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'board_names': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                      items=openapi.Schema(type=openapi.TYPE_STRING)),
+                        'board_representation': openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                               items=openapi.Schema(type=openapi.TYPE_NUMBER))
+                    }
+                )
+            )
+        }
+    )
     def get(self, request):
         # categories = Category.objects.values('id', 'name')
         histories = list(History.objects.filter(user=request.user.id).values('text', 'date', 'time'))[::-1]

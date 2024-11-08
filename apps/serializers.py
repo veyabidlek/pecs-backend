@@ -91,8 +91,11 @@ class PlaySoundSerializer(serializers.Serializer):
     board_id = serializers.IntegerField()
 
 
-class SignupSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(max_length=50)
+class SignupSerializer(serializers.ModelSerializer): # changed from modelSerializer to Serializer
+    role = serializers.CharField(max_length=50, required=True)
+    email = serializers.EmailField(required=True)  # Make email required
+    first_name = serializers.CharField(max_length=30, required=True)  # Make first_name required
+    last_name = serializers.CharField(max_length=30, required=True)  # Make last_name required
 
     class Meta:
         model = User
@@ -120,7 +123,16 @@ class SignupSerializer(serializers.ModelSerializer):
 
         return user
 
-# class FolderSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Folder
-#         fields = '__all__'
+
+
+
+#
+# from apps.models import Care_recipient
+# from django.contrib.auth.models import User
+
+# user = User.objects.get(username='your_username')  # replace 'your_username' with the actual username
+# try:
+#     care_recipient = Care_recipient.objects.get(user=user)
+#     print(care_recipient)
+# except Care_recipient.DoesNotExist:
+#     print("Care_recipient does not exist for this user.")
