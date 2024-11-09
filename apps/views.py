@@ -1,7 +1,7 @@
 import random
 from datetime import datetime
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from drf_yasg import openapi
@@ -32,37 +32,60 @@ class CaregiverProfileView(APIView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN)
-                        # 'caregiver': openapi.Schema()
+                        "username": openapi.Schema(type=openapi.TYPE_STRING, description="Username of the user"),
+                        "email": openapi.Schema(type=openapi.TYPE_STRING, format="email",
+                                                description="Email of the user"),
+                        "first_name": openapi.Schema(type=openapi.TYPE_STRING, description="First name of the user"),
+                        "last_name": openapi.Schema(type=openapi.TYPE_STRING, description="Last name of the user"),
+                        "is_active": openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                                    description="Indicates if the user is active"),
+                        "date_joined": openapi.Schema(type=openapi.TYPE_STRING, format="date-time",
+                                                      description="Date when the user joined"),
+                        "is_cg": openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                                description="Indicates if the user is a caregiver"),
+                        "care_receivers": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    "user": openapi.Schema(type=openapi.TYPE_STRING,
+                                                           description="Username of the care_receiver"),
+                                    "user_id": openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                              description="ID of the care_receiver user"),
+                                    "profile_picture": openapi.Schema(type=openapi.TYPE_STRING, format="url",
+                                                                      description="URL to the care_receiver's profile picture"),
+                                }
+                            ),
+                            description="List of care_receivers associated with the care giver"
+                        )
                     }
                 )
             ),
-            404: "Caregiver not found"
+            404: openapi.Response(description="Caregiver not found")
         }
     )
     def get(self, request):
-
         # try:
-            user = request.user
-            caregiver = Care_giver.objects.get(user=request.user)
-            serializer = CaregiverSerializer(caregiver)
+        user = request.user
+        caregiver = Care_giver.objects.get(user=request.user)
+        serializer = CaregiverSerializer(caregiver)
 
-            profile_data = {
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "is_active": user.is_active,
-                "date_joined": user.date_joined,
-                'is_cg': True,
-            }
+        profile_data = {
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_active": user.is_active,
+            "date_joined": user.date_joined,
+            'is_cg': True,
+        }
 
-            profile_data.update(serializer.data)
+        profile_data.update(serializer.data)
 
-            return Response(profile_data, status=status.HTTP_200_OK)
+        return Response(profile_data, status=status.HTTP_200_OK)
 
     # except Care_giver.DoesNotExist:
-        #     return Response({'detail': 'Caregiver not found.'}, status=status.HTTP_404_NOT_FOUND)
+    #     return Response({'detail': 'Caregiver not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -279,11 +302,36 @@ class RecipientProfileView(APIView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                        # 'caregiver': openapi.Schema(type=openapi.TYPE_OBJECT)
+                        "username": openapi.Schema(type=openapi.TYPE_STRING, description="Username of the user"),
+                        "email": openapi.Schema(type=openapi.TYPE_STRING, format="email",
+                                                description="Email of the user"),
+                        "first_name": openapi.Schema(type=openapi.TYPE_STRING, description="First name of the user"),
+                        "last_name": openapi.Schema(type=openapi.TYPE_STRING, description="Last name of the user"),
+                        "is_active": openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                                    description="Indicates if the user is active"),
+                        "date_joined": openapi.Schema(type=openapi.TYPE_STRING, format="date-time",
+                                                      description="Date when the user joined"),
+                        "is_cr": openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                                description="Indicates if the user is a care recipient"),
+                        "caregivers": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    "user": openapi.Schema(type=openapi.TYPE_STRING,
+                                                           description="Username of the caregiver"),
+                                    "user_id": openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                              description="ID of the caregiver user"),
+                                    "profile_picture": openapi.Schema(type=openapi.TYPE_STRING, format="url",
+                                                                      description="URL to the caregiver's profile picture"),
+                                }
+                            ),
+                            description="List of caregivers associated with the care recipient"
+                        )
                     }
                 )
-            )
+            ),
+            404: openapi.Response(description="Care recipient profile not found"),
         }
     )
     def get(self, request):
