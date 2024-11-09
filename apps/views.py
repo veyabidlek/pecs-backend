@@ -7,10 +7,11 @@ from django.utils.translation import gettext as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import models
 from .application import play_sound
@@ -40,16 +41,28 @@ class CaregiverProfileView(APIView):
         }
     )
     def get(self, request):
-        try:
+
+        # try:
+            user = request.user
             caregiver = Care_giver.objects.get(user=request.user)
             serializer = CaregiverSerializer(caregiver)
-            data = {
+
+            profile_data = {
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_active": user.is_active,
+                "date_joined": user.date_joined,
                 'is_cg': True,
-                'caregiver': serializer.data,
             }
-            return Response(data, status=status.HTTP_200_OK)
-        except Care_giver.DoesNotExist:
-            return Response({'detail': 'Caregiver not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+            profile_data.update(serializer.data)
+
+            return Response(profile_data, status=status.HTTP_200_OK)
+
+    # except Care_giver.DoesNotExist:
+        #     return Response({'detail': 'Caregiver not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -274,17 +287,25 @@ class RecipientProfileView(APIView):
         }
     )
     def get(self, request):
+        user = request.user  # `request.user` will be set automatically by the JWTAuthentication
         care_recipient = Care_recipient.objects.get(user=request.user)
         serializer = CareRecipientSerializer(care_recipient)
-        data = {
+
+        profile_data = {
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_active": user.is_active,
+            "date_joined": user.date_joined,
             'is_cr': True,
-            'caregiver': serializer.data,
         }
-        return Response(data, status=status.HTTP_200_OK)
+        profile_data.update(serializer.data)
+        return Response(profile_data, status=status.HTTP_200_OK)
 
 
 class LoginUserView(APIView):
-    permission_classes = [AllowAny]  # Allow any user to access this endpoint
+    permission_classes = [AllowAny]
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -301,41 +322,53 @@ class LoginUserView(APIView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'token': openapi.Schema(type=openapi.TYPE_STRING),
+                        'access': openapi.Schema(type=openapi.TYPE_STRING),
+                        'refresh': openapi.Schema(type=openapi.TYPE_STRING),
                         'user_type': openapi.Schema(
                             type=openapi.TYPE_STRING,
                             enum=['recipient', 'caregiver', 'unknown']
-                        )
+                        ),
+                        'user_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'username': openapi.Schema(type=openapi.TYPE_STRING),
                     }
                 )
             ),
-            400: "Invalid credentials"
+            401: "Invalid credentials"
         }
     )
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(request, username=username, password=password)
-        #
-        if user is not None:
-            login(request, user)
-            token, created = Token.objects.get_or_create(user=user)  # Generate or get the user's token
 
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
             data = {
-                'token': token.key,  # Return the token in the response
-                'user_type': 'recipient' if is_recipient(user) else 'caregiver' if is_caregiver(user) else 'unknown'
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user_type': 'recipient' if is_recipient(user) else 'caregiver' if is_caregiver(user) else 'unknown',
+                'user_id': user.id,
+                'username': user.username,
             }
-            return Response(data, status=200)  # Respond with 200 OK and user information
-        else:
-            return Response({'error': _("Неправильный логин или пароль! Попробуйте снова.")},
-                            status=400)  # Bad request response
+            return Response(data, status=status.HTTP_200_OK)
+
+        return Response(
+            {'error': _("Invalid username or password.")},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
 class LogoutUserView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
-        operation_description="Logout the authenticated user",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['refresh_token'],
+            properties={
+                'refresh_token': openapi.Schema(type=openapi.TYPE_STRING),
+            }
+        ),
         responses={
             200: openapi.Response(
                 description="Logout successful",
@@ -345,12 +378,34 @@ class LogoutUserView(APIView):
                         'message': openapi.Schema(type=openapi.TYPE_STRING)
                     }
                 )
-            )
+            ),
+            400: "Invalid token"
         }
     )
     def post(self, request):
-        logout(request)  # Log out the user
-        return Response({'message': 'Successfully logged out.'}, status=200)  # Success response
+        try:
+            refresh_token = request.data.get("refresh_token")
+            if not refresh_token:
+                return Response({'error': 'Refresh token is required.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {'message': 'Successfully logged out.'},
+                status=status.HTTP_200_OK
+            )
+        except TokenError:
+            return Response(
+                {'error': 'Invalid or expired token.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class SignupUserView(APIView):
