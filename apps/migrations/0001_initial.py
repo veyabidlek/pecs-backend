@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Category',
+            name='Folder',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100)),
@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(max_length=50)),
                 ('image', models.ImageField(upload_to='library/')),
                 ('public', models.BooleanField(default=True)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='apps.category')),
+                ('folder', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='apps.folder')),
                 ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

@@ -36,7 +36,7 @@ class Care_giver(models.Model):
         return id
 
 
-class Category(models.Model):
+class Folder(models.Model):
     name = models.CharField(max_length=100)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, default=0)
 
@@ -54,7 +54,7 @@ class Category(models.Model):
 class Image(models.Model):
     label = models.CharField(max_length=50, blank=False)
     image = models.ImageField(upload_to='library/')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    folder = models.ForeignKey(Folder, on_delete=models.CASCADE)
     public = models.BooleanField(default=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
 

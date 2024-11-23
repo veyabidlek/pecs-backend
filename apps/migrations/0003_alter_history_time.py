@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('apps', '0002_category_creator_alter_history_time'),
+        ('apps', '0002_folder_creator_alter_history_time'),
     ]
 
     operations = [

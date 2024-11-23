@@ -67,7 +67,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -86,7 +85,6 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
-
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -186,14 +184,29 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'pecs_db',
         'USER': 'pecs_user',
         'PASSWORD': 'yJK$Uh_CU^6G',
-        'HOST':'localhost',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
+}
+
+SWAGGER_SETTINGS = {
+    # ```
+    # 'DEFAULT_INFO': 'path.to.your.api_info',  # Optional for default API info
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+            'name': 'Authorization',
+            'in': 'header',
+        }
+    },
+    'USE_SESSION_AUTH': False,  # Disable session-based authentication in Swagger
+    'SECURITY': [{'Bearer': []}],  # Globally require Bearer for all endpoints
+    # ```
 }

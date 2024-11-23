@@ -11,6 +11,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import re_path
 from .views import *
+from .login import *
 
 
 schema_view = get_schema_view(
@@ -41,9 +42,9 @@ urlpatterns = [
     path('recipient_profile', RecipientProfileView.as_view(), name='recipient_profile'),
     path('library', LibraryView.as_view(), name='library'),
     path('my_boards', BoardCollectionView.as_view(), name='my_boards'),
-    path('category/<str:name>/<int:id>', CategoryImageView.as_view(), name='category_image'),
+    path('folder/<int:id>', FolderImageView.as_view(), name='folder_image'),
     path('board/<int:board_id>', BoardDetailView.as_view(), name='board'),
-    path('board_category', BoardCategoryView.as_view(), name='board_category'),
+    # path('board_category', BoardFolderView.as_view(), name='board_category'),
     path('profile-page', ProfileView.as_view(), name='profile'),
     path('cr-profile-page', RecipientProfileView.as_view(), name='recipient_profile'),
     path("ajax/", PlaySoundView.as_view(), name='call_play_sound'),
@@ -52,6 +53,9 @@ urlpatterns = [
     path('verify-code', VerifyCodeView.as_view(), name='verify_code'),
     path('progress-tracking', ProgressView.as_view(), name='progress'),
     path('progress-bars', BarCharsView.as_view(), name='bars'),
+
+    path('folder/', FolderCreateView.as_view(), name='folder-create'),
+
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # For obtaining tokens
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # For refreshing tokens

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="dataSourceStorageLocal" created-in="PY-242.23726.102">
+  <component name="dataSourceStorageLocal" created-in="PY-232.10203.26">
     <data-source name="Django default" uuid="5c087eb1-9e5a-45ff-a79b-4c4cc23871e9">
-      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" exact-version="0" />
       <user-name>beka</user-name>
       <schema-mapping />
     </data-source>

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import Care_recipient, Care_giver, Category, Image, Board, Tab, Image_positions, History, Codes
+from .models import Care_recipient, Care_giver, Image, Board, Tab, Image_positions, History, Codes, Folder
 
 
 class CareRecipientSerializer(serializers.ModelSerializer):
@@ -22,12 +22,12 @@ class CaregiverSerializer(serializers.ModelSerializer):
         fields = ['user', 'profile_pic', 'recipients', 'user_id']
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class FolderSerializer(serializers.ModelSerializer):
     is_private = serializers.SerializerMethodField()
     display_name = serializers.SerializerMethodField()
 
     class Meta:
-        model = Category
+        model = Folder
         fields = ['id', 'name', 'creator', 'is_private', 'display_name']
 
     def get_is_private(self, obj):
@@ -42,7 +42,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ['id', 'label', 'image', 'category', 'public', 'creator', 'creator_name']
+        fields = ['id', 'label', 'image', 'folder', 'public', 'creator', 'creator_name']
 
 
 class BoardSerializer(serializers.ModelSerializer):
@@ -91,15 +91,23 @@ class PlaySoundSerializer(serializers.Serializer):
     board_id = serializers.IntegerField()
 
 
-class SignupSerializer(serializers.ModelSerializer): # changed from modelSerializer to Serializer
+class SignupSerializer(serializers.ModelSerializer):
     role = serializers.CharField(max_length=50, required=True)
-    email = serializers.EmailField(required=True)  # Make email required
-    first_name = serializers.CharField(max_length=30, required=True)  # Make first_name required
-    last_name = serializers.CharField(max_length=30, required=True)  # Make last_name required
+    email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(max_length=30, required=True)
+    last_name = serializers.CharField(max_length=30, required=True)
 
     class Meta:
         model = User
         fields = ['username', 'password', 'email', 'first_name', 'last_name', 'role']
+
+    def validate(self, attrs):
+        role = attrs.get('role')
+        if role not in ['cg_role', 'cr_role']:
+            raise serializers.ValidationError(
+                {"role": "Invalid role specified. Use 'cg_role' for caregiver or 'cr_role' for care recipient."}
+            )
+        return attrs
 
     def create(self, validated_data):
         role = validated_data.pop('role')
@@ -107,22 +115,17 @@ class SignupSerializer(serializers.ModelSerializer): # changed from modelSeriali
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
 
+        # Add role-specific logic after validation
         if role == 'cg_role':
             Care_giver.objects.get_or_create(user=user)
-            # Add user to CAREGIVER group
             my_group, _ = Group.objects.get_or_create(name='CAREGIVER')
             my_group.user_set.add(user)
         elif role == 'cr_role':
             Care_recipient.objects.get_or_create(user=user)
-            # Add user to RECIPIENT group
             my_group, _ = Group.objects.get_or_create(name='RECIPIENT')
             my_group.user_set.add(user)
-        else:
-            raise ValidationError(
-                {"role": "Invalid role specified. Use 'cg_role' for caregiver or 'cr_role' for care recipient."})
 
         return user
-
 
 
 
