@@ -13,7 +13,7 @@ from .login import is_recipient, is_caregiver
 from .models import Care_recipient, Care_giver, Codes, Board, Folder, Image, Tab, Image_positions, History
 from .serializers import VerifyCodeSerializer, PlaySoundSerializer, BoardSerializer, \
     HistorySerializer, ImageSerializer, FolderSerializer, TabSerializer, \
-    ImagePositionSerializer, FolderImageSerializer
+    ImagePositionSerializer
 
 
 class GenerateCodeView(APIView):
@@ -278,47 +278,75 @@ class BoardCollectionView(APIView):
         return Response({"message": "Board already exists."}, status=status.HTTP_200_OK)
 
 
-folder_response = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        'images': openapi.Schema(
-            type=openapi.TYPE_ARRAY,
-            items=openapi.Schema(
+upload_image_response = openapi.Response(
+    description="Image uploaded successfully and added to the folder.",
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'message': openapi.Schema(type=openapi.TYPE_STRING, description="Success message indicating image upload status."),
+            'folder_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the folder the image was uploaded to."),
+            'image_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the uploaded image."),
+            'image_details': openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    'id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                    'label': openapi.Schema(type=openapi.TYPE_STRING),
-                    'image': openapi.Schema(type=openapi.TYPE_STRING),
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="Image ID"),
+                    'label': openapi.Schema(type=openapi.TYPE_STRING, description="Label assigned to the image"),
+                    'folder': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the folder to which the image belongs"),
+                    'public': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Whether the image is public or not"),
+                    'creator_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the creator of the image"),
+                    'creator_name': openapi.Schema(type=openapi.TYPE_STRING, description="Username of the creator"),
+                    'image_url': openapi.Schema(type=openapi.TYPE_STRING, description="URL of the uploaded image"),
                 }
             )
-        ),
-        'folder': openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                'name': openapi.Schema(type=openapi.TYPE_STRING),
-            }
-        ),
-        'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-        'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-    }
+        }
+    )
+)
+
+
+folder_response = openapi.Response(
+    description="Successful response containing images for the folder",
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="Folder ID"),
+            'name': openapi.Schema(type=openapi.TYPE_STRING, description="Folder name"),
+            'is_cr': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Indicates if the user is a recipient"),
+            'is_cg': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Indicates if the user is a caregiver"),
+            'images': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="Image ID"),
+                        'label': openapi.Schema(type=openapi.TYPE_STRING, description="Image label"),
+                        'folder': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the folder"),
+                        'public': openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                                 description="Indicates if the image is public"),
+                        'creator_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the creator"),
+                        'creator_name': openapi.Schema(type=openapi.TYPE_STRING, description="Username of the creator"),
+                        'image_url': openapi.Schema(type=openapi.TYPE_STRING, description="URL of the image"),
+                    }
+                ),
+                description="List of images in the folder"
+            )
+        }
+    )
 )
 
 
 class FolderImageView(APIView):
-    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Get images for a specific folder",
         responses={
             200: folder_response,
-            404: openapi.Response(description="folder not found")
+            404: openapi.Response(description="Folder not found.")
         },
         manual_parameters=[
             openapi.Parameter(
                 'id',
                 openapi.IN_PATH,
-                description="folder ID",
+                description="Folder ID",
                 type=openapi.TYPE_INTEGER,
                 required=True,
             ),
@@ -339,7 +367,7 @@ class FolderImageView(APIView):
                 'name': folder.name,
                 'is_cr': is_recipient(request.user),
                 'is_cg': is_caregiver(request.user),
-                'images': serializer.data # Convert to list for JSON serialization
+                'images': serializer.data  # Convert to list for JSON serialization
             }
 
             return Response(response_data, status=status.HTTP_200_OK)
@@ -347,22 +375,24 @@ class FolderImageView(APIView):
             return Response({'error': 'folder not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     @swagger_auto_schema(
+        operation_id="upload_image_to_folder",  # Specify a custom operation name
+        operation_description="Upload image for a specific folder",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=['folder_name', 'image'],
             properties={
-                'folder_name': openapi.Schema(type=openapi.TYPE_STRING,
-                                              description="The name of the folder."),
+                'folder_name': openapi.Schema(type=openapi.TYPE_STRING, description="The name of the folder."),
                 'image': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_BINARY,
                                         description="Image file."),
                 'label': openapi.Schema(type=openapi.TYPE_STRING, description="Optional label for the image."),
             }
         ),
         responses={
-            201: "Image uploaded successfully and added to folder",
-            400: "Invalid data",
+            201: upload_image_response,
+            400: openapi.Response(description="Invalid data or missing fields."),
+            404: openapi.Response(description="Folder with the specified ID does not exist."),
+            500: openapi.Response(description="Internal server error while uploading the image.")
         }
-
     )
     def post(self, request, id):
         image_data = request.FILES.get('image')  # Get the uploaded image

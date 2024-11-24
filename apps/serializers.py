@@ -38,13 +38,13 @@ class FolderSerializer(serializers.ModelSerializer):
         return str(obj)
 
 
-class FolderImageSerializer(serializers.ModelSerializer):
-    creator_name = serializers.CharField(source="creator.username", read_only=True)
-    image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Image
-        fields = ['id', 'label', 'creator_name', 'image_url']
+# class FolderImageSerializer(serializers.ModelSerializer):
+#     creator_name = serializers.CharField(source="creator.username", read_only=True)
+#     image_url = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = Image
+#         fields = ['id', 'label', 'creator_name', 'image_url']
 
     # def get_image_url(self, obj):
     #     try:

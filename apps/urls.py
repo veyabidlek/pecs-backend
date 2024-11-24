@@ -44,7 +44,6 @@ urlpatterns = [
     path('my_boards', BoardCollectionView.as_view(), name='my_boards'),
     path('folder/<int:id>', FolderImageView.as_view(), name='folder_image'),
     path('board/<int:board_id>', BoardDetailView.as_view(), name='board'),
-    # path('board_category', BoardFolderView.as_view(), name='board_category'),
     path('profile-page', ProfileView.as_view(), name='profile'),
     path('cr-profile-page', RecipientProfileView.as_view(), name='recipient_profile'),
     path("ajax/", PlaySoundView.as_view(), name='call_play_sound'),
