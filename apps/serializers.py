@@ -1,6 +1,7 @@
+from urllib.parse import quote
+
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from .models import Care_recipient, Care_giver, Image, Board, Tab, Image_positions, History, Codes, Folder
 
@@ -37,12 +38,43 @@ class FolderSerializer(serializers.ModelSerializer):
         return str(obj)
 
 
-class ImageSerializer(serializers.ModelSerializer):
+class FolderImageSerializer(serializers.ModelSerializer):
     creator_name = serializers.CharField(source="creator.username", read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Image
-        fields = ['id', 'label', 'image', 'folder', 'public', 'creator', 'creator_name']
+        fields = ['id', 'label', 'creator_name', 'image_url']
+
+    # def get_image_url(self, obj):
+    #     try:
+    #         if obj.image:
+    #             r2_base_url = "https://pub-f6fd6da427b441459aff60f0c2f6b9e3.r2.dev/"
+    #             return f"{r2_base_url}{obj.image.name}"  # Use the file's storage path
+    #         return None
+    #     except Exception as e:
+    #         print(f"Error getting image URL: {e}")
+    #         return None
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    creator_name = serializers.CharField(source="creator.username", read_only=True)
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Image
+        fields = ['id', 'label', 'folder', 'public', 'creator_id', 'creator_name', 'image_url']
+
+    def get_image_url(self, obj):
+        try:
+            if obj.image:
+                r2_base_url = "https://pub-f6fd6da427b441459aff60f0c2f6b9e3.r2.dev/"
+                encoded_image_name = quote(obj.image.name)
+                return f"{r2_base_url}{encoded_image_name}"
+            return None
+        except Exception as e:
+            print(f"Error getting image URL: {e}")
+            return None
 
 
 class BoardSerializer(serializers.ModelSerializer):
@@ -126,8 +158,6 @@ class SignupSerializer(serializers.ModelSerializer):
             my_group.user_set.add(user)
 
         return user
-
-
 
 #
 # from apps.models import Care_recipient

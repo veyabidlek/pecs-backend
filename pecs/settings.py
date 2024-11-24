@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',
     'django.contrib.staticfiles',
-
+    'storages'
 ]
 
 REST_FRAMEWORK = {
@@ -66,6 +66,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -85,6 +86,7 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -184,12 +186,13 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pecs_db',
-        'USER': 'pecs_user',
-        'PASSWORD': 'yJK$Uh_CU^6G',
+        'NAME': 'mydb',
+        'USER': 'beka',
+        'PASSWORD': 'Beka2005',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -210,3 +213,34 @@ SWAGGER_SETTINGS = {
     'SECURITY': [{'Bearer': []}],  # Globally require Bearer for all endpoints
     # ```
 }
+
+
+
+# Cloudflare R2 Configuration
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# R2 Access Keys
+AWS_ACCESS_KEY_ID = '25a511b46cb0c5f02cb0af7a40ca5488'
+AWS_SECRET_ACCESS_KEY = 'b36dbbb3def1f42f56e1aca128a903cd98ded9b6caf8fdd0d1190bd24bfd6b57'
+
+# R2 Bucket and Endpoint
+AWS_STORAGE_BUCKET_NAME = 'images'
+AWS_S3_ENDPOINT_URL = 'https://9e8809518f4a26bfae073ab9e56e428d.r2.cloudflarestorage.com'
+
+# Optional Settings
+AWS_QUERYSTRING_AUTH = False  # Set to True if you want querystring-based authentication
+AWS_S3_SIGNATURE_VERSION = 's3v4'  # Add this to ensure signature version is compatible with Cloudflare R2
+
+
+AWS_S3_REGION_NAME = 'auto'  # Required for R2
+AWS_DEFAULT_ACL = 'public-read'  # If you want files to be publicly accessible
+AWS_S3_VERIFY = True
+AWS_S3_FILE_OVERWRITE = False  # Prevent files with same name overwriting each other
+
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_ENDPOINT_URL.split("://")[1]}/'
+
+
+# ACCESS_KEY = "25a511b46cb0c5f02cb0af7a40ca5488"
+# SECRET_KEY = "b36dbbb3def1f42f56e1aca128a903cd98ded9b6caf8fdd0d1190bd24bfd6b57"
+# ENDPOINT = "https://9e8809518f4a26bfae073ab9e56e428d.r2.cloudflarestorage.com"
+# BUCKET_NAME = "tutorial"

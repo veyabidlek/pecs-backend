@@ -35,6 +35,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('label', models.CharField(max_length=50)),
                 ('image', models.ImageField(upload_to='library/')),
+                ('image_url', models.URLField()),
                 ('public', models.BooleanField(default=True)),
                 ('folder', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='apps.folder')),
                 ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),

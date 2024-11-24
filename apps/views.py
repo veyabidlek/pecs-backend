@@ -13,7 +13,7 @@ from .login import is_recipient, is_caregiver
 from .models import Care_recipient, Care_giver, Codes, Board, Folder, Image, Tab, Image_positions, History
 from .serializers import VerifyCodeSerializer, PlaySoundSerializer, BoardSerializer, \
     HistorySerializer, ImageSerializer, FolderSerializer, TabSerializer, \
-    ImagePositionSerializer
+    ImagePositionSerializer, FolderImageSerializer
 
 
 class GenerateCodeView(APIView):
@@ -327,14 +327,19 @@ class FolderImageView(APIView):
     def get(self, request, id):
         try:
             folder = Folder.objects.get(id=id)
-            images = Image.objects.filter(folder=folder).values('id', 'label', 'image').distinct()
+
+            # images = Image.objects.filter(folder=folder).values('id', 'label', 'image').distinct()
+
+            images = Image.objects.filter(folder=folder).distinct()
+
+            serializer = ImageSerializer(images, many=True, context={'request': request})
 
             response_data = {
                 'id': folder.id,
                 'name': folder.name,
                 'is_cr': is_recipient(request.user),
                 'is_cg': is_caregiver(request.user),
-                'images': list(images),  # Convert to list for JSON serialization
+                'images': serializer.data # Convert to list for JSON serialization
             }
 
             return Response(response_data, status=status.HTTP_200_OK)
@@ -360,13 +365,19 @@ class FolderImageView(APIView):
 
     )
     def post(self, request, id):
-        image_data = request.FILES.get('image')
-        label = request.data.get('label', '')
+        image_data = request.FILES.get('image')  # Get the uploaded image
+        label = request.data.get('label', '')  # Get the label
 
         # Check if both folder_name and image are provided
         if not image_data:
             return Response(
                 {"error": "'image' field is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not label:
+            return Response(
+                {"error": "'label' field is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -380,17 +391,27 @@ class FolderImageView(APIView):
             )
 
         # Create and save the image under the folder
-        image = Image.objects.create(
-            folder=folder,
-            image=image_data,
-            label=label,
-            creator=request.user,
-        )
+        try:
+            image = Image.objects.create(
+                folder=folder,
+                image=image_data,  # Store the image file
+                label=label,
+                creator=request.user,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to upload image: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Serialize the response
+        serializer = ImageSerializer(image)
 
         response_message = {
             "message": "Image uploaded successfully.",
             "folder_id": folder.id,
             "image_id": image.id,
+            "image_details": serializer.data
         }
         return Response(response_message, status=status.HTTP_201_CREATED)
 

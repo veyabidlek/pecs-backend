@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 import datetime
 
+from storages.backends.s3boto3 import S3Boto3Storage
 
 # Create your models here.
 class Care_recipient(models.Model):
@@ -53,10 +54,11 @@ class Folder(models.Model):
 
 class Image(models.Model):
     label = models.CharField(max_length=50, blank=False)
-    image = models.ImageField(upload_to='library/')
+    image = models.ImageField(storage=S3Boto3Storage())
     folder = models.ForeignKey(Folder, on_delete=models.CASCADE)
     public = models.BooleanField(default=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    image_url = models.URLField()
 
     def __str__(self):
         return self.label
