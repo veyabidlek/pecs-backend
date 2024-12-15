@@ -14,9 +14,10 @@ import os
 from pathlib import Path
 from django.contrib import messages
 from datetime import timedelta
-
+from dotenv import load_dotenv
 from django_otp.plugins.otp_email.conf import settings
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_URL = '/static/'
@@ -31,7 +32,7 @@ STATICFILES_DIRS = [
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q#c6+8)_p$zv_47x0r+r6%1x2@t@-m32oux0%t2h1l5rhgll4&'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -76,7 +77,7 @@ SIMPLE_JWT = {
     'UPDATE_LAST_LOGIN': False,
 
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': '14674a8bee1e5549c7df41535297415a8c3a9083f9a9c1b3e0a8d45bb05d93de',
+    'SIGNING_KEY': os.getenv('JWT_SIGNING_KEY'),
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
     'ISSUER': None,
@@ -166,8 +167,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -177,12 +176,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -190,9 +183,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pecs_db',
-        'USER': 'pecs_user',
-        'PASSWORD': 'yJK$Uh_CU^6G',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST':'localhost',
         'PORT': '5432',
     }
@@ -220,12 +213,12 @@ SWAGGER_SETTINGS = {
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # R2 Access Keys
-AWS_ACCESS_KEY_ID = '25a511b46cb0c5f02cb0af7a40ca5488'
-AWS_SECRET_ACCESS_KEY = 'b36dbbb3def1f42f56e1aca128a903cd98ded9b6caf8fdd0d1190bd24bfd6b57'
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 
 # R2 Bucket and Endpoint
-AWS_STORAGE_BUCKET_NAME = 'images'
-AWS_S3_ENDPOINT_URL = 'https://9e8809518f4a26bfae073ab9e56e428d.r2.cloudflarestorage.com'
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
 
 # Optional Settings
 AWS_QUERYSTRING_AUTH = False  # Set to True if you want querystring-based authentication
@@ -239,8 +232,3 @@ AWS_S3_FILE_OVERWRITE = False  # Prevent files with same name overwriting each o
 
 MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_ENDPOINT_URL.split("://")[1]}/'
 
-
-# ACCESS_KEY = "25a511b46cb0c5f02cb0af7a40ca5488"
-# SECRET_KEY = "b36dbbb3def1f42f56e1aca128a903cd98ded9b6caf8fdd0d1190bd24bfd6b57"
-# ENDPOINT = "https://9e8809518f4a26bfae073ab9e56e428d.r2.cloudflarestorage.com"
-# BUCKET_NAME = "tutorial"

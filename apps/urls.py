@@ -53,9 +53,9 @@ urlpatterns = [
     path('progress-tracking', ProgressView.as_view(), name='progress'),
     path('progress-bars', BarCharsView.as_view(), name='bars'),
 
-    path('folder/', FolderCreateView.as_view(), name='folder-create'),
+    path('folder', FolderCreateView.as_view(), name='folder-create'),
 
-
+    path('tts', TextToSpeechView.as_view(), name='text-to-speach'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # For obtaining tokens
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # For refreshing tokens
 

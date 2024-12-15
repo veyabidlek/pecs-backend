@@ -5,6 +5,15 @@ import datetime
 
 from storages.backends.s3boto3 import S3Boto3Storage
 
+
+class R2StorageAudio(S3Boto3Storage):
+    bucket_name = 'audio'
+
+
+class TextEntry(models.Model):
+    text = models.CharField(max_length=1000)
+
+
 # Create your models here.
 class Care_recipient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

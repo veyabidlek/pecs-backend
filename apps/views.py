@@ -1,8 +1,18 @@
+import base64
+import os
 import random
-from datetime import datetime
+from urllib.parse import quote
 
+from django.core.files.base import ContentFile
+
+import pecs.settings as settings
+from datetime import datetime
+from pathlib import Path
+from django.core.files.storage import default_storage
+from dotenv import load_dotenv
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from openai import OpenAI
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,10 +20,12 @@ from rest_framework.views import APIView
 
 from .application import play_sound
 from .login import is_recipient, is_caregiver
-from .models import Care_recipient, Care_giver, Codes, Board, Folder, Image, Tab, Image_positions, History
+from .models import Care_recipient, Care_giver, Codes, Board, Folder, Image, Tab, Image_positions, History, \
+    R2StorageAudio
 from .serializers import VerifyCodeSerializer, PlaySoundSerializer, BoardSerializer, \
     HistorySerializer, ImageSerializer, FolderSerializer, TabSerializer, \
-    ImagePositionSerializer
+    ImagePositionSerializer, TextToSpeechSerializer
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class GenerateCodeView(APIView):
@@ -283,17 +295,22 @@ upload_image_response = openapi.Response(
     schema=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'message': openapi.Schema(type=openapi.TYPE_STRING, description="Success message indicating image upload status."),
-            'folder_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the folder the image was uploaded to."),
+            'message': openapi.Schema(type=openapi.TYPE_STRING,
+                                      description="Success message indicating image upload status."),
+            'folder_id': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                        description="ID of the folder the image was uploaded to."),
             'image_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the uploaded image."),
             'image_details': openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
                     'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="Image ID"),
                     'label': openapi.Schema(type=openapi.TYPE_STRING, description="Label assigned to the image"),
-                    'folder': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the folder to which the image belongs"),
-                    'public': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Whether the image is public or not"),
-                    'creator_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the creator of the image"),
+                    'folder': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                             description="ID of the folder to which the image belongs"),
+                    'public': openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                             description="Whether the image is public or not"),
+                    'creator_id': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                 description="ID of the creator of the image"),
                     'creator_name': openapi.Schema(type=openapi.TYPE_STRING, description="Username of the creator"),
                     'image_url': openapi.Schema(type=openapi.TYPE_STRING, description="URL of the uploaded image"),
                 }
@@ -301,7 +318,6 @@ upload_image_response = openapi.Response(
         }
     )
 )
-
 
 folder_response = openapi.Response(
     description="Successful response containing images for the folder",
@@ -742,9 +758,50 @@ class FolderCreateView(APIView):
     def post(self, request):
         folder_data = request.data
         serializer = FolderSerializer(data=folder_data)
-
+        print("Serializer.data")
         if serializer.is_valid():
             folder = serializer.save(creator=request.user)
             return Response({"message": "folder created successfully", "folder": serializer.data}, status=201)
 
         return Response(serializer.errors, status=400)
+
+
+class TextToSpeechView(APIView):
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request):
+        load_dotenv()
+        serializer = TextToSpeechSerializer(data=request.data)
+        if serializer.is_valid():
+            r2_file_path = 'audio/' + serializer.data['text'] + '.mp3'
+
+            storage = S3Boto3Storage()
+
+            client = OpenAI(api_key=os.getenv('OPEN_AI_API_KEY'))
+
+            try:
+                response = client.audio.speech.create(
+                    model="tts-1",
+                    voice="nova",
+                    input= serializer.data['text'],
+                )
+
+                audio_content = response.content
+                try:
+                    with storage.open(r2_file_path, 'wb') as f:
+                        f.write(audio_content)
+
+                    r2_base_url = os.getenv('R2_BASE_URL') + "/audio"
+                    encoded_audio_name = quote(serializer.data['text'] + ".mp3")
+                    r2_audio_url = f"{r2_base_url}{encoded_audio_name}"
+
+                    return Response({"audio_url": r2_audio_url},
+                                    status=status.HTTP_200_OK)
+
+                except Exception as e:
+                    return Response({"error": f"Failed to upload audio to R2: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Exception as e:
+                return Response({"error": f"Failed to upload audio to R2: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=400)
+

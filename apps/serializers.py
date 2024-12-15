@@ -3,7 +3,13 @@ from urllib.parse import quote
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from .models import Care_recipient, Care_giver, Image, Board, Tab, Image_positions, History, Codes, Folder
+from .models import Care_recipient, Care_giver, Image, Board, Tab, Image_positions, History, Codes, Folder, TextEntry
+
+
+class TextToSpeechSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TextEntry
+        fields = ['text']
 
 
 class CareRecipientSerializer(serializers.ModelSerializer):
@@ -46,15 +52,15 @@ class FolderSerializer(serializers.ModelSerializer):
 #         model = Image
 #         fields = ['id', 'label', 'creator_name', 'image_url']
 
-    # def get_image_url(self, obj):
-    #     try:
-    #         if obj.image:
-    #             r2_base_url = "https://pub-f6fd6da427b441459aff60f0c2f6b9e3.r2.dev/"
-    #             return f"{r2_base_url}{obj.image.name}"  # Use the file's storage path
-    #         return None
-    #     except Exception as e:
-    #         print(f"Error getting image URL: {e}")
-    #         return None
+# def get_image_url(self, obj):
+#     try:
+#         if obj.image:
+#             r2_base_url = "https://pub-f6fd6da427b441459aff60f0c2f6b9e3.r2.dev/"
+#             return f"{r2_base_url}{obj.image.name}"  # Use the file's storage path
+#         return None
+#     except Exception as e:
+#         print(f"Error getting image URL: {e}")
+#         return None
 
 
 class ImageSerializer(serializers.ModelSerializer):

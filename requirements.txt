@@ -101,9 +101,9 @@ jupyterlab_server==2.27.3
 jupyterlab_widgets==3.0.13
 kiwisolver==1.4.7
 # Editable install with no version control (kotaemon==0.4.6)
--e /Users/bektas/Desktop/kotaemon/libs/kotaemon
+#-e /Users/bektas/Desktop/kotaemon/libs/kotaemon
 # Editable install with no version control (ktem==0.4.6)
--e /Users/bektas/Desktop/kotaemon/libs/ktem
+#-e /Users/bektas/Desktop/kotaemon/libs/ktem
 langchain==0.2.5
 langchain-community==0.2.5
 langchain-core==0.2.9
@@ -216,3 +216,6 @@ webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.13
 yarl==1.9.4
+django_storages
+boto3
+aiofiles
